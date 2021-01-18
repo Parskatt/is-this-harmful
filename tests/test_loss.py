@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,7 +10,7 @@ from torch.autograd import Variable
 
 from mmaction.models import (BCELossWithLogits, BinaryLogisticRegressionLoss,
                              BMNLoss, CrossEntropyLoss, HVULoss, NLLLoss,
-                             OHEMHingeLoss, SSNLoss)
+                             OHEMHingeLoss, SSNLoss, KLDivergenceLoss)
 
 
 def test_hvu_loss():
@@ -290,3 +291,34 @@ def test_ssn_loss():
     assert torch.equal(output_loss['loss_completeness'],
                        output_completeness_loss * 0.1)
     assert torch.equal(output_loss['loss_reg'], output_reg_loss * 0.1)
+
+def test_kl_loss():
+    # We will test that the sampled implemented KL divergence loss corresponds well with the theoretical
+    # KL divergence for 2 univariate gaussians
+    #KL(p,q)=log(σ2/σ1)+(σ^21+(μ1−μ2)^2)/σ^22−1/2
+    N = 1000
+    x = torch.linspace(-10,10,N)
+    cls_scores = (-x**2/2)[None,:]
+    gt_labels = torch.exp(-x**2/2)[None,:]
+    gt_labels /= torch.sum(gt_labels)
+
+    # KL should be 0
+    KL_loss = KLDivergenceLoss(1.0,num_classes=N)
+    l = KL_loss(cls_scores,gt_labels)
+    assert l.norm() < 1e-5
+    cls_scores = (-x**2/2)[None,:]
+    gt_labels = torch.exp(-(x+1)**2/2)[None,:]
+    gt_labels /= torch.sum(gt_labels)
+    #KL should be 1/2
+    KL_loss = KLDivergenceLoss(1.0,num_classes=N)
+    l = KL_loss(cls_scores,gt_labels)
+    assert (l-0.5).norm() < 1e-5
+    cls_scores = (-x**2/4)[None,:]
+    gt_labels = torch.exp(-(x-1)**2/2)[None,:]
+    gt_labels /= torch.sum(gt_labels)
+    #KL should be log(2)/2
+    KL_loss = KLDivergenceLoss(1.0,num_classes=N)
+    l = KL_loss(cls_scores,gt_labels)
+    #KL should be math.log(2)/2
+    assert (l-math.log(2)/2).norm() < 1e-5
+

@@ -9,7 +9,7 @@ from .heads import (AudioTSNHead, BaseHead, I3DHead, SlowFastHead, TPNHead,
 from .localizers import BMN, PEM, TEM
 from .losses import (BCELossWithLogits, BinaryLogisticRegressionLoss, BMNLoss,
                      CrossEntropyLoss, HVULoss, NLLLoss, OHEMHingeLoss,
-                     SSNLoss)
+                     SSNLoss,KLDivergenceLoss)
 from .necks import TPN
 from .recognizers import (AudioRecognizer, BaseRecognizer, recognizer2d,
                           recognizer3d)
@@ -22,7 +22,7 @@ __all__ = [
     'BaseRecognizer', 'LOSSES', 'CrossEntropyLoss', 'NLLLoss', 'HVULoss',
     'ResNetTSM', 'ResNet3dSlowFast', 'SlowFastHead', 'Conv2plus1d',
     'ResNet3dSlowOnly', 'BCELossWithLogits', 'LOCALIZERS', 'build_localizer',
-    'PEM', 'TEM', 'BinaryLogisticRegressionLoss', 'BMN', 'BMNLoss',
+    'PEM', 'TEM', 'BinaryLogisticRegressionLoss', 'BMN', 'BMNLoss','KLDivergenceLoss',
     'build_model', 'OHEMHingeLoss', 'SSNLoss', 'ResNet3dCSN', 'ResNetTIN',
     'TPN', 'TPNHead', 'build_loss', 'build_neck', 'AudioRecognizer',
     'AudioTSNHead', 'X3D', 'X3DHead', 'ResNetAudio', 'ConvAudio'
