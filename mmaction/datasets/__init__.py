@@ -12,10 +12,11 @@ from .rawframe_dataset import RawframeDataset
 from .rawvideo_dataset import RawVideoDataset
 from .ssn_dataset import SSNDataset
 from .video_dataset import VideoDataset
+from .swe_trailers_dataset import SweTrailersDataset
 
 __all__ = [
     'VideoDataset', 'build_dataloader', 'build_dataset', 'RepeatDataset',
     'RawframeDataset', 'BaseDataset', 'ActivityNetDataset', 'SSNDataset',
     'HVUDataset', 'AudioDataset', 'AudioFeatureDataset', 'ImageDataset',
-    'RawVideoDataset', 'AVADataset', 'AudioVisualDataset'
+    'RawVideoDataset', 'AVADataset', 'AudioVisualDataset', 'SweTrailersDataset'
 ]
