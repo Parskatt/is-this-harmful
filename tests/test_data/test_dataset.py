@@ -11,7 +11,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from mmaction.datasets import (ActivityNetDataset, AudioDataset,
                                AudioFeatureDataset, AudioVisualDataset,
                                HVUDataset, RawframeDataset, RawVideoDataset,
-                               RepeatDataset, SSNDataset, VideoDataset)
+                               RepeatDataset, SSNDataset, VideoDataset,SweTrailersDataset)
 
 
 class TestDataset:
@@ -47,6 +47,8 @@ class TestDataset:
                                               'audio_feature_test_list.txt')
         cls.rawvideo_test_anno_txt = osp.join(cls.data_prefix,
                                               'rawvideo_test_anno.txt')
+        cls.swe_trailers_test_anno_json = osp.join(cls.data_prefix,
+                                              'swe_trailers_test_anno.json')
         cls.rawvideo_test_anno_json = osp.join(cls.data_prefix,
                                                'rawvideo_test_anno.json')
         cls.rawvideo_pipeline = []
@@ -970,3 +972,8 @@ class TestDataset:
             results, metrics=['top_k_accuracy', 'mean_class_accuracy'])
         assert set(eval_result) == set(
             ['top1_acc', 'top5_acc', 'mean_class_accuracy'])
+    def test_swe_trailers(self):
+        video_dataset = SweTrailersDataset(
+            self.swe_trailers_test_anno_json,
+            self.video_pipeline)
+        assert len(video_dataset) == 2
