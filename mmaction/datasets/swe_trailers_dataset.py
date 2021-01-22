@@ -48,7 +48,7 @@ class SweTrailersDataset(BaseDataset):
                 clip["label"] = p
             else:
                 lbl = clip["label"][0]
-                clip["label"] = self._label_to_ind(lbl)
+                clip["label"] = self.label_to_ind(lbl)
         return video_infos
     
     def prepare_train_frames(self, idx):
@@ -56,7 +56,7 @@ class SweTrailersDataset(BaseDataset):
         results = copy.deepcopy(self.video_infos[idx])
         results['modality'] = self.modality
         results['start_index'] = self.start_index
-        results['filename_tmpl'] = results["filename"]+'_{:05}.jpg'
+        results['filename_tmpl'] = results["filename"]+'_{}.jpg'
         results['frame_dir'] = join(self.data_prefix,results["filename"])
         return self.pipeline(results)
 
@@ -65,6 +65,6 @@ class SweTrailersDataset(BaseDataset):
         results = copy.deepcopy(self.video_infos[idx])
         results['modality'] = self.modality
         results['start_index'] = self.start_index
-        results['filename_tmpl'] = results["filename"]+'_{:05}.jpg'
+        results['filename_tmpl'] = results["filename"]+'_{}.jpg'
         results['frame_dir'] = join(self.data_prefix,results["filename"])
         return self.pipeline(results)

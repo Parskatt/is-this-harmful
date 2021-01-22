@@ -6,11 +6,23 @@ from .base import BaseWeightedLoss
 
 @LOSSES.register_module()
 class KLDivergenceLoss(BaseWeightedLoss):
-    def __init__(self, loss_weight, num_classes):
+    """ Forward KL-divergence loss
+    """
+    def __init__(self,loss_weight=1.):
         super().__init__(loss_weight)
-        self.num_classes = num_classes
-    def _forward(self, cls_score, p, **kwargs):
-        #KL(p∥q)=∫p(x)log (p(x)/q(x))dx
-        log_q = torch.log_softmax(cls_score,dim=-1)
-        loss_kl = (p*p.log()-p*log_q).sum()
+    def _forward(self, cls_score, p, eps=1e-8,**kwargs):
+        """Calculate the forward KL-divergence between soft labels (p) and class scores.
+            q = exp(cls_score)/∫exp(cls_score)
+            KL(p∥q)=∫p(x)log(p(x)/q(x))dx
+        Args:
+                cls_score (torch.Tensor): Predicted scores for labels (energy).
+                p (torch.Tensor): Ground truth soft-labels.
+                eps (float): Epsilon for small value. Default: 1e-8.
+
+        Returns:
+                torch.Tensor: Mean forward KL-divergence over the batch .
+        """
+        #
+        log_q = cls_score.log_softmax(dim=-1)
+        loss_kl = (p*(p+eps).log()-p*log_q).sum(dim=-1).mean() #TODO: make reduction method optional
         return loss_kl

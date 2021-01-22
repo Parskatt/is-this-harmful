@@ -16,7 +16,7 @@ model = dict(
         num_classes=4,
         spatial_type='avg',
         dropout_ratio=0.5,
-        loss_cls=dict(type='CrossEntropyLoss')))
+        loss_cls=dict(type='KLDivergenceLoss')))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
 dataset_type = 'SweTrailersDataset'
@@ -78,20 +78,17 @@ data = dict(
         type=dataset_type,
         ann_file=ann_file_train,
         data_prefix=data_root,
-        pipeline=train_pipeline,
-        label_as_distribution=False),
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
         data_prefix=data_root_val,
-        pipeline=val_pipeline,
-        label_as_distribution=False),
+        pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
         data_prefix=data_root_val,
-        pipeline=test_pipeline,
-        label_as_distribution=False))
+        pipeline=test_pipeline))
 # optimizer
 optimizer = dict(
     type='SGD', lr=0.01, momentum=0.9,
