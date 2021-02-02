@@ -10,7 +10,7 @@ from torch.autograd import Variable
 
 from mmaction.models import (BCELossWithLogits, BinaryLogisticRegressionLoss,
                              BMNLoss, CrossEntropyLoss, HVULoss, NLLLoss,
-                             OHEMHingeLoss, SSNLoss, KLDivergenceLoss)
+                             OHEMHingeLoss, SSNLoss, KLDivergenceLoss, EMDLoss)
 
 
 def test_hvu_loss():
@@ -310,15 +310,46 @@ def test_kl_loss():
     gt_labels = torch.exp(-(x+1)**2/2)[None,:]
     gt_labels /= torch.sum(gt_labels)
     #KL should be 1/2
-    KL_loss = KLDivergenceLoss(1.0,num_classes=N)
+    KL_loss = KLDivergenceLoss(1.0)
     l = KL_loss(cls_scores,gt_labels)
     assert (l-0.5).norm() < 1e-5
     cls_scores = (-x**2/4)[None,:]
     gt_labels = torch.exp(-(x-1)**2/2)[None,:]
     gt_labels /= torch.sum(gt_labels)
     #KL should be log(2)/2
-    KL_loss = KLDivergenceLoss(1.0,num_classes=N)
+    KL_loss = KLDivergenceLoss(1.0)
     l = KL_loss(cls_scores,gt_labels)
     #KL should be math.log(2)/2
     assert (l-math.log(2)/2).norm() < 1e-5
+
+def test_emd_loss():
+    N = 1000
+    x = torch.linspace(-10,10,N)
+    cls_scores = (-x**2/2)[None,:]
+    gt_labels = torch.exp(-x**2/2)[None,:]
+    gt_labels /= torch.sum(gt_labels)
+
+    # EMD should be 0
+    C = torch.cdist(x[None,:,None],x[None,:,None])[0]**2
+    EMD_Loss = EMDLoss(C,1.0)
+    l = EMD_Loss(cls_scores,gt_labels)
+    print(l)
+    assert l.norm() < 1e-4,l.norm()
+    cls_scores = (-x**2/2)[None,:]
+    gt_labels = torch.exp(-(x+1)**2/2)[None,:]
+    gt_labels /= torch.sum(gt_labels)
+    #EMD should be 1
+    l = EMD_Loss(cls_scores,gt_labels)
+    print(l)
+    assert (l-1).norm() < 1e-4,l.norm()
+    cls_scores = (-x**2/8)[None,:]
+    gt_labels = torch.exp(-(x-1)**2/2)[None,:]
+    gt_labels /= torch.sum(gt_labels)
+    #EMD should be 2
+    l = EMD_Loss(cls_scores,gt_labels)
+    print(l)
+    assert (l-2).norm() < 1e-4,l.norm()
+
+
+
 

@@ -16,12 +16,13 @@ model = dict(
         num_classes=4,
         spatial_type='avg',
         dropout_ratio=0.5,
-        loss_cls=dict(type='CrossEntropyLoss')))
-
+        loss_cls=dict(type='EMDLoss',C=[[0.,1,2,3],[1,0,1,2],[2,1,0,1],[3,2,1,0]])))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
 dataset_type = 'SweTrailersDataset'
 data_root = 'data/swe_trailers/data'
+data_root_val = 'data/swe_trailers/data'
+data_root_test = 'data/swe_trailers/data'
 ann_file_train = 'data/swe_trailers/train.json'
 ann_file_val = 'data/swe_trailers/val.json'
 ann_file_test = 'data/swe_trailers/test.json'
@@ -43,7 +44,7 @@ val_pipeline = [
     dict(
         type='SampleFrames',
         clip_len=8,
-        frame_interval=16,
+        frame_interval=8,
         num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
@@ -73,25 +74,22 @@ test_pipeline = [
 ]
 data = dict(
     videos_per_gpu=8,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
         data_prefix=data_root,
-        pipeline=train_pipeline,
-        label_as_distribution=False),
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
-        data_prefix=data_root,
-        pipeline=val_pipeline,
-        label_as_distribution=False),
+        data_prefix=data_root_val,
+        pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
-        data_prefix=data_root,
-        pipeline=test_pipeline,
-        label_as_distribution=False))
+        data_prefix=data_root_test,
+        pipeline=test_pipeline))
 # optimizer
 optimizer = dict(
     type='SGD', lr=0.01, momentum=0.9,
@@ -100,7 +98,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0)
 total_epochs = 256
-checkpoint_config = dict(interval=1000)
+checkpoint_config = dict(interval=4)
 workflow = [('train', 1),('val',1)]
 evaluation = dict(
     interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
@@ -108,10 +106,11 @@ log_config = dict(
     interval=20,
     hooks=[
         dict(type='TextLoggerHook'),
+        #    dict(type='TensorboardLoggerHook'),
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/slowonly_swe_trailers_CE'
+work_dir = './work_dirs/slowonly_r50_8x8x1_256e_kinetics400_rgb'
 #https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth
 load_from = 'slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
 resume_from = None

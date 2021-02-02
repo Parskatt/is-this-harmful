@@ -8,8 +8,9 @@ from .ohem_hinge_loss import OHEMHingeLoss
 from .ssn_loss import SSNLoss
 from .kl_divergence_loss import KLDivergenceLoss
 from .frechet_distance_loss import FrechetDistanceLoss
+from .emd_loss import EMDLoss
 __all__ = [
     'BaseWeightedLoss', 'CrossEntropyLoss', 'NLLLoss', 'BCELossWithLogits',
     'BinaryLogisticRegressionLoss', 'BMNLoss', 'OHEMHingeLoss', 'SSNLoss',
-    'HVULoss', 'KLDivergenceLoss','FrechetDistanceLoss'
+    'HVULoss', 'KLDivergenceLoss','FrechetDistanceLoss','EMDLoss'
 ]
