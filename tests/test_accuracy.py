@@ -9,7 +9,7 @@ from mmaction.core import (ActivityNetDetection,
                            average_recall_at_avg_proposals, confusion_matrix,
                            get_weighted_score, mean_average_precision,
                            mean_class_accuracy, mmit_mean_average_precision,
-                           pairwise_temporal_iou, top_k_accuracy)
+                           pairwise_temporal_iou, top_k_accuracy,wasserstein_1_distance)
 
 
 def gt_confusion_matrix(gt_labels, pred_labels, normalize=None):
@@ -291,3 +291,11 @@ def test_mean_average_precision():
 
     content_for_unittest(scores, label1, result1)
     content_for_unittest(scores, label2, result2)
+
+def test_wasserstein_1_distance():
+    q = np.array([0.4,0.3,0.2,0.1])
+    p = np.array([0.1,0.2,0.3,0.4])
+    assert np.abs(4-wasserstein_1_distance(q,p,delta_x=4.))<1e-5,np.abs(4-wasserstein_1_distance(q,p,delta_x=4.))
+    q = np.array([0.,0.,0.,1.])
+    p = np.array([1.,0.,0.,0.])
+    assert np.abs(12-wasserstein_1_distance(q,p,delta_x=4.))<1e-5,np.abs(12-wasserstein_1_distance(q,p,delta_x=4.))
