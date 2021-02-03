@@ -68,3 +68,6 @@ class SweTrailersDataset(BaseDataset):
         results['filename_tmpl'] = results["filename"]+'_{}.jpg'
         results['frame_dir'] = join(self.data_prefix,results["filename"])
         return self.pipeline(results)
+
+    def evaluate(self, results, metrics, metric_options, logger):
+        raise NotImplementedError
