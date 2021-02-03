@@ -1,3 +1,4 @@
+label_as_distribution = True
 model = dict(
     type='Recognizer3D',
     backbone=dict(
@@ -16,6 +17,7 @@ model = dict(
         num_classes=4,
         spatial_type='avg',
         dropout_ratio=0.5,
+        label_as_distribution = label_as_distribution,
         loss_cls=dict(type='KLDivergenceLoss')))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
@@ -79,26 +81,29 @@ data = dict(
         type=dataset_type,
         ann_file=ann_file_train,
         data_prefix=data_root,
-        pipeline=train_pipeline),
+        pipeline=train_pipeline,
+        label_as_distribution = label_as_distribution),
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
         data_prefix=data_root_val,
-        pipeline=val_pipeline),
+        pipeline=val_pipeline,
+        label_as_distribution = label_as_distribution),
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
         data_prefix=data_root_val,
-        pipeline=test_pipeline))
+        pipeline=test_pipeline,
+        label_as_distribution = label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.01, momentum=0.9,
+    type='SGD', lr=0.01/8, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0)
 total_epochs = 256
-checkpoint_config = dict(interval=4)
+checkpoint_config = dict(interval=100)
 workflow = [('train', 1),('val',1)]
 evaluation = dict(
     interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
@@ -110,7 +115,7 @@ log_config = dict(
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/slowonly_r50_8x8x1_256e_kinetics400_rgb'
+work_dir = './work_dirs/slowonly_swe_trailers_KL'
 #https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth
 load_from = 'slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
 resume_from = None
