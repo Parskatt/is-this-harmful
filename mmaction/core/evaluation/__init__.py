@@ -3,7 +3,7 @@ from .accuracy import (average_precision_at_temporal_iou,
                        get_weighted_score, interpolated_precision_recall,
                        mean_average_precision, mean_class_accuracy,
                        mmit_mean_average_precision, pairwise_temporal_iou,
-                       softmax, top_k_accuracy)
+                       softmax, top_k_accuracy, wasserstein_1_distance)
 from .eval_detection import ActivityNetDetection
 from .eval_hooks import DistEpochEvalHook, EpochEvalHook
 
@@ -13,5 +13,5 @@ __all__ = [
     'get_weighted_score', 'average_recall_at_avg_proposals',
     'pairwise_temporal_iou', 'average_precision_at_temporal_iou',
     'ActivityNetDetection', 'softmax', 'interpolated_precision_recall',
-    'mmit_mean_average_precision'
+    'mmit_mean_average_precision','wasserstein_1_distance'
 ]
