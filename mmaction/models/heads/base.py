@@ -48,6 +48,7 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
                  in_channels,
                  loss_cls=dict(type='CrossEntropyLoss', loss_factor=1.0),
                  multi_class=False,
+                 label_as_distribution=False,
                  label_smooth_eps=0.0):
         super().__init__()
         self.num_classes = num_classes
@@ -55,7 +56,7 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
         self.loss_cls = build_loss(loss_cls)
         self.multi_class = multi_class
         self.label_smooth_eps = label_smooth_eps
-
+        self.label_as_distribution = label_as_distribution
     @abstractmethod
     def init_weights(self):
         """Initiate the parameters either from existing checkpoint or from
@@ -81,8 +82,12 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
             labels = labels.unsqueeze(0)
 
         if not self.multi_class:
+            if self.label_as_distribution:
+                top_labels = labels.argmax(dim=-1)
+            else:
+                top_labels = labels
             top_k_acc = top_k_accuracy(cls_score.detach().cpu().numpy(),
-                                       labels.detach().cpu().numpy(), (1, 5))
+                                       top_labels.detach().cpu().numpy(), (1, 5))
             losses['top1_acc'] = torch.tensor(
                 top_k_acc[0], device=cls_score.device)
             losses['top5_acc'] = torch.tensor(
