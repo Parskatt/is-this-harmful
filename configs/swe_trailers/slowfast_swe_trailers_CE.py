@@ -1,24 +1,41 @@
-label_as_distribution = True
+label_as_distribution = False
 model = dict(
     type='Recognizer3D',
     backbone=dict(
-        type='ResNet3dSlowOnly',
-        depth=50,
+        type='ResNet3dSlowFast',
         pretrained=None,
-        lateral=False,
-        conv1_kernel=(1, 7, 7),
-        conv1_stride_t=1,
-        pool1_stride_t=1,
-        inflate=(0, 0, 1, 1),
-        norm_eval=False),
+        resample_rate=4,  # tau
+        speed_ratio=4,  # alpha
+        channel_ratio=8,  # beta_inv
+        slow_pathway=dict(
+            type='resnet3d',
+            depth=50,
+            pretrained=None,
+            lateral=True,
+            fusion_kernel=7,
+            conv1_kernel=(1, 7, 7),
+            dilations=(1, 1, 1, 1),
+            conv1_stride_t=1,
+            pool1_stride_t=1,
+            inflate=(0, 0, 1, 1),
+            norm_eval=False),
+        fast_pathway=dict(
+            type='resnet3d',
+            depth=50,
+            pretrained=None,
+            lateral=False,
+            base_channels=8,
+            conv1_kernel=(5, 7, 7),
+            conv1_stride_t=1,
+            pool1_stride_t=1,
+            norm_eval=False)),
     cls_head=dict(
-        type='I3DHead',
-        in_channels=2048,
+        type='SlowFastHead',
+        in_channels=2304,  # 2048+256
         num_classes=4,
         spatial_type='avg',
         dropout_ratio=0.5,
-        label_as_distribution = label_as_distribution,
-        loss_cls=dict(type='EMDLoss',C=[[0.,1,2,3],[1,0,1,2],[2,1,0,1],[3,2,1,0]])))
+        label_as_distribution=label_as_distribution))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
 dataset_type = 'SweTrailersDataset'
@@ -31,7 +48,7 @@ ann_file_test = 'data/swe_trailers/test.json'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 train_pipeline = [
-    dict(type='SampleFrames', clip_len=8, frame_interval=16, num_clips=1),
+    dict(type='SampleFrames', clip_len=32, frame_interval=7, num_clips=1),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='RandomResizedCrop'),
@@ -45,8 +62,8 @@ train_pipeline = [
 val_pipeline = [
     dict(
         type='SampleFrames',
-        clip_len=8,
-        frame_interval=16,
+        clip_len=32,
+        frame_interval=2,
         num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
@@ -61,9 +78,9 @@ val_pipeline = [
 test_pipeline = [
     dict(
         type='SampleFrames',
-        clip_len=8,
-        frame_interval=16,
-        num_clips=1,
+        clip_len=32,
+        frame_interval=2,
+        num_clips=10,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -75,47 +92,49 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=8,
+    videos_per_gpu=7,
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
         data_prefix=data_root,
         pipeline=train_pipeline,
-        label_as_distribution = label_as_distribution),
+        label_as_distribution=label_as_distribution),
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
         data_prefix=data_root_val,
         pipeline=val_pipeline,
-        label_as_distribution = label_as_distribution),
+        label_as_distribution=label_as_distribution),
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
-        data_prefix=data_root_test,
+        data_prefix=data_root_val,
         pipeline=test_pipeline,
-        label_as_distribution = label_as_distribution))
+        label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.01/8, momentum=0.9,
-    weight_decay=0.0001)  # this lr is used for 8 gpus
+    type='SGD', lr=0.015, momentum=0.9,
+    weight_decay=0.0001)  # this lr is used for 1 gpu
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 256
+lr_config = dict(
+    policy='CosineAnnealing',
+    min_lr=0)
+total_epochs = 20
 checkpoint_config = dict(interval=100)
-workflow = [('train', 1),('val',1)]
+workflow = [('train', 2),('val', 1)]
 evaluation = dict(
-    interval=5, metrics=['top_ksadasd_accuracy', 'mean_class_accuracy'])
+    interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 log_config = dict(
     interval=20,
     hooks=[
         dict(type='TextLoggerHook'),
+        #    dict(type='TensorboardLoggerHook'),
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/slowonly_swe_trailers_EMD'
-#https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth
-load_from = 'slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
+work_dir = './work_dirs/slowfast_r50_3d_8x8x1_256e_swe_trailers'
+load_from="https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth"
 resume_from = None
 find_unused_parameters = False

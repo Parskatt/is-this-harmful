@@ -11,6 +11,9 @@ from ..core import mean_average_precision
 from .base import BaseDataset
 from .registry import DATASETS
 
+from ..core import (mean_class_accuracy,top_k_accuracy,confusion_matrix)
+
+
 
 @DATASETS.register_module()
 class SweTrailersDataset(BaseDataset):
@@ -69,5 +72,92 @@ class SweTrailersDataset(BaseDataset):
         results['frame_dir'] = join(self.data_prefix,results["filename"])
         return self.pipeline(results)
 
-    def evaluate(self, results, metrics, metric_options, logger):
-        raise NotImplementedError
+    def evaluate(self,
+                results,
+                metrics='confusion_matrix',
+                metric_options=dict(top_k_accuracy=dict(topk=(1,))),
+                logger=None,
+                **deprecated_kwargs):
+        """Perform evaluation for common datasets.
+        Args:
+            results (list): Output results.
+            metrics (str | sequence[str]): Metrics to be performed.
+                Defaults: 'top_k_accuracy'.
+            metric_options (dict): Dict for metric options. Options are
+                ``topk`` for ``top_k_accuracy``.
+                Default: ``dict(top_k_accuracy=dict(topk=(1,)))``.
+            logger (logging.Logger | None): Logger for recording.
+                Default: None.
+            deprecated_kwargs (dict): Used for containing deprecated arguments.
+                See 'https://github.com/open-mmlab/mmaction2/pull/286'.
+
+        Returns:
+            dict: Evaluation results dict.
+        """
+        # Protect ``metric_options`` since it uses mutable value as default
+        metric_options = copy.deepcopy(metric_options)
+
+        if deprecated_kwargs != {}:
+            warnings.warn(
+                'Option arguments for metrics has been changed to '
+                "`metric_options`, See 'https://github.com/open-mmlab/mmaction2/pull/286' "  # noqa: E501
+                'for more details')
+            metric_options['top_k_accuracy'] = dict(
+                metric_options['top_k_accuracy'], **deprecated_kwargs)
+
+        if not isinstance(results, list):
+            raise TypeError(f'results must be a list, but got {type(results)}')
+        assert len(results) == len(self), (
+            f'The length of results is not equal to the dataset len: '
+            f'{len(results)} != {len(self)}')
+
+        metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
+        allowed_metrics = [
+            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy'
+        ]
+
+        for metric in metrics:
+            if metric not in allowed_metrics:
+                raise KeyError(f'metric {metric} is not supported')
+
+        eval_results = {}
+        if not self.label_as_distribution:
+            gt_labels = [ann['label'] for ann in self.video_infos]
+        else:
+            gt_labels = [np.argmax(ann['label']) for ann in self.video_infos]
+
+        for metric in metrics:
+            msg = f'Evaluating {metric} ...'
+            if logger is None:
+                msg = '\n' + msg
+            print_log(msg, logger=logger)
+
+            if metric == 'top_k_accuracy':
+                topk = metric_options.setdefault('top_k_accuracy',
+                                                    {}).setdefault(
+                                                        'topk', (1, 5))
+                if not isinstance(topk, (int, tuple)):
+                    raise TypeError('topk must be int or tuple of int, '
+                                    f'but got {type(topk)}')
+                if isinstance(topk, int):
+                    topk = (topk, )
+
+                top_k_acc = top_k_accuracy(results, gt_labels, topk)
+                log_msg = []
+                for k, acc in zip(topk, top_k_acc):
+                    eval_results[f'top{k}_acc'] = acc
+                    log_msg.append(f'\ntop{k}_acc\t{acc:.4f}')
+                log_msg = ''.join(log_msg)
+                print_log(log_msg, logger=logger)
+            elif metric == 'mean_class_accuracy':
+                mean_acc = mean_class_accuracy(results, gt_labels)
+                eval_results['mean_class_accuracy'] = mean_acc
+                log_msg = f'\nMean class accuracy: \n {mean_acc:.4f}'
+                print_log(log_msg, logger=logger)            
+            elif metric == 'confusion_matrix':
+                result_argmax = np.argmax(results,axis=1)
+                confusion_mat = confusion_matrix(result_argmax,gt_labels)
+                eval_results['confusion_matrix'] = confusion_mat
+                log_msg = f'\nConfusion Matrix:\n{confusion_mat}'
+                print_log(log_msg, logger=logger)
+        return eval_results

@@ -1,4 +1,4 @@
-label_as_distribution = True
+label_as_distribution = False
 model = dict(
     type='Recognizer3D',
     backbone=dict(
@@ -63,8 +63,8 @@ test_pipeline = [
     dict(
         type='SampleFrames',
         clip_len=8,
-        frame_interval=8,
-        num_clips=10,
+        frame_interval=16,
+        num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -77,7 +77,7 @@ test_pipeline = [
 ]
 data = dict(
     videos_per_gpu=8,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
