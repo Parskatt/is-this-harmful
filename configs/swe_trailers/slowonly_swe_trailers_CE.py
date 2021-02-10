@@ -64,7 +64,7 @@ test_pipeline = [
         type='SampleFrames',
         clip_len=8,
         frame_interval=16,
-        num_clips=1,
+        num_clips=3,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -99,12 +99,12 @@ data = dict(
 # optimizer
 optimizer = dict(
     type='SGD', lr=0.01/8, momentum=0.9,
-    weight_decay=0.0001)  # this lr is used for 8 gpus
+    weight_decay=0.0001)  # this lr is used for 1 gpu
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 256
-checkpoint_config = dict(interval=100)
+lr_config = dict(policy='CosineAnnealing', min_lr=.001)#TODO: just doing this to prevent lr decay when doing few epochs 
+total_epochs = 20
+checkpoint_config = dict(interval=20)
 workflow = [('train', 1),('val',1)]
 evaluation = dict(
     interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
