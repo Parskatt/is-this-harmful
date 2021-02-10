@@ -52,6 +52,7 @@ class SweTrailersDataset(BaseDataset):
             else:
                 lbl = clip["label"][0]
                 clip["label"] = self.label_to_ind(lbl)
+            clip["audio_path"] = join(self.data_prefix,clip["filename"],clip["filename"]+".wav")
         return video_infos
     
     def prepare_train_frames(self, idx):

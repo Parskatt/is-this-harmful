@@ -1538,7 +1538,7 @@ class MelSpectrogram:
                  window_size=32,
                  step_size=16,
                  n_mels=80,
-                 fixed_length=128):
+                 fixed_length=500):
         if all(
                 isinstance(x, int)
                 for x in [window_size, step_size, n_mels, fixed_length]):
@@ -1565,6 +1565,7 @@ class MelSpectrogram:
         n_fft = int(round(sample_rate * self.window_size / 1000))
         hop_length = int(round(sample_rate * self.step_size / 1000))
         melspectrograms = list()
+        #max_t = int(results['clip_len']/results['total_frames']*results['length']/hop_length)+10
         for clip_idx in range(results['num_clips']):
             clip_signal = signals[clip_idx]
             mel = librosa.feature.melspectrogram(
@@ -1573,12 +1574,19 @@ class MelSpectrogram:
                 n_fft=n_fft,
                 hop_length=hop_length,
                 n_mels=self.n_mels)
-            if mel.shape[0] >= self.fixed_length:
-                mel = mel[:self.fixed_length, :]
+            if mel.shape[-1] > self.fixed_length:
+                mel = mel[:,:self.fixed_length]
             else:
                 mel = np.pad(
-                    mel, ((0, mel.shape[-1] - self.fixed_length), (0, 0)),
+                    mel, ((0, 0),(0, self.fixed_length-mel.shape[-1])),
                     mode='edge')
+            #if mel.shape[0] >= self.fixed_length:
+            #    mel = mel[:self.fixed_length, :]
+            #else:
+            #    mel = np.pad(
+            #        mel, ((0, mel.shape[-1] - self.fixed_length), (0, 0)),
+            #        mode='edge')
+
             melspectrograms.append(mel)
 
         results['audios'] = np.array(melspectrograms)

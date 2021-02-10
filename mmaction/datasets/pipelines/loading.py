@@ -3,7 +3,7 @@ import os
 import os.path as osp
 import shutil
 import warnings
-
+from scipy import interpolate
 import mmcv
 import numpy as np
 import torch
@@ -1338,9 +1338,11 @@ class AudioDecode:
     added or modified keys are "audios", "audios_shape".
     """
 
-    def __init__(self, fixed_length=32000):
-        self.fixed_length = fixed_length
-
+    def __init__(self, standard_sample_rate=16000,standard_fps=25):
+        #TODO: this is not good if the fps of the clip is different than standard
+        # The problem comes from having a fixed clip
+        self.standard_sample_rate = standard_sample_rate
+        self.standard_fps = standard_fps
     def __call__(self, results):
         """Perform the ``AudioDecode`` to pick audio clips."""
         audio = results['audios']
@@ -1348,6 +1350,7 @@ class AudioDecode:
         num_clips = results['num_clips']
         resampled_clips = list()
         frame_inds = frame_inds.reshape(num_clips, -1)
+        min_length = np.inf
         for clip_idx in range(num_clips):
             clip_frame_inds = frame_inds[clip_idx]
             start_idx = max(
@@ -1361,17 +1364,10 @@ class AudioDecode:
                     round((clip_frame_inds[-1] + 1) / results['total_frames'] *
                           results['length'])))
             cropped_audio = audio[start_idx:end_idx]
-            if cropped_audio.shape[0] >= self.fixed_length:
-                truncated_audio = cropped_audio[:self.fixed_length]
-            else:
-                truncated_audio = np.pad(
-                    cropped_audio,
-                    ((0, self.fixed_length - cropped_audio.shape[0])),
-                    mode='constant')
+            min_length = min(len(cropped_audio),min_length)
+            resampled_clips.append(cropped_audio)
 
-            resampled_clips.append(truncated_audio)
-
-        results['audios'] = np.array(resampled_clips)
+        results['audios'] = np.array([r_c[:min_length] for r_c in resampled_clips])
         results['audios_shape'] = results['audios'].shape
         return results
 

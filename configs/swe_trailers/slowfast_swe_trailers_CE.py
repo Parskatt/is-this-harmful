@@ -63,7 +63,7 @@ val_pipeline = [
     dict(
         type='SampleFrames',
         clip_len=32,
-        frame_interval=2,
+        frame_interval=7,
         num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
@@ -79,18 +79,20 @@ test_pipeline = [
     dict(
         type='SampleFrames',
         clip_len=32,
-        frame_interval=2,
-        num_clips=10,
+        frame_interval=7,
+        num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
-    dict(type='ThreeCrop', crop_size=256),
-    dict(type='Flip', flip_ratio=0),
+    dict(type='CenterCrop', crop_size=256),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
 ]
+#    dict(type='ThreeCrop', crop_size=256),
+#    dict(type='Flip', flip_ratio=0),
+
 data = dict(
     videos_per_gpu=7,
     workers_per_gpu=4,
@@ -114,15 +116,15 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.015, momentum=0.9,
+    type='SGD', lr=0.01/8, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 1 gpu
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(
     policy='CosineAnnealing',
-    min_lr=0)
+    min_lr=0.01/8)
 total_epochs = 20
-checkpoint_config = dict(interval=100)
+checkpoint_config = dict(interval=20)
 workflow = [('train', 2),('val', 1)]
 evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
