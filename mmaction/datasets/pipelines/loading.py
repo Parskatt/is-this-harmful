@@ -1308,8 +1308,10 @@ class LoadAudioFeature:
                 to the next transform in pipeline.
         """
         if osp.exists(results['audio_path']):
-            feature_map = np.load(results['audio_path'])
+            feature_map = np.load(results['audio_path']).T # TODO: this transpose is simply to comply with mmactions notation, should work this out
         else:
+            raise NotImplementedError
+            # TODO: this format is different than mine
             # Generate a random dummy 10s input
             # Some videos do not have audio stream
             pad_func = getattr(self, f'_{self.pad_method}_pad')
@@ -1422,10 +1424,10 @@ class AudioFeatureSelector:
     Args:
         fixed_length (int): As the features selected by frames sampled may
             not be extactly the same, `fixed_length` will truncate or pad them
-            into the same size. Default: 128.
+            into the same size. Default: 300. #TODO: this should work without magic constant...
     """
 
-    def __init__(self, fixed_length=128):
+    def __init__(self, fixed_length=300):
         self.fixed_length = fixed_length
 
     def __call__(self, results):
@@ -1439,7 +1441,6 @@ class AudioFeatureSelector:
         frame_inds = results['frame_inds']
         num_clips = results['num_clips']
         resampled_clips = list()
-
         frame_inds = frame_inds.reshape(num_clips, -1)
         for clip_idx in range(num_clips):
             clip_frame_inds = frame_inds[clip_idx]

@@ -1517,6 +1517,34 @@ class AudioAmplify:
         repr_str = f'{self.__class__.__name__}(ratio={self.ratio})'
         return repr_str
 
+@PIPELINES.register_module()
+class AudioNormalize:
+    """Normalize audio.
+
+    Required keys are "audios", added or modified keys are "audios",
+    "amplify_ratio".
+
+    Args:
+        mu (float): The mean to be subtracted.
+        sigma (float): The standard deviation
+    """
+
+    def __init__(self, mu = -28.393,sigma = 17.323):
+        self.mu = mu
+        self.sigma = sigma
+    def __call__(self, results):
+        """Perfrom the audio amplification.
+
+        Args:
+            results (dict): The resulting dict to be modified and passed
+                to the next transform in pipeline.
+        """
+        assert 'audios' in results
+        results['audios'] = (results['audios']-self.mu)/self.sigma
+        return results
+
+
+
 
 @PIPELINES.register_module()
 class MelSpectrogram:
