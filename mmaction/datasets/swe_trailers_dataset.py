@@ -11,7 +11,7 @@ from ..core import mean_average_precision
 from .base import BaseDataset
 from .registry import DATASETS
 
-from ..core import (mean_class_accuracy,top_k_accuracy,confusion_matrix)
+from ..core import (mean_class_accuracy,top_k_accuracy,confusion_matrix,wasserstein_1_distance)
 
 
 
@@ -42,6 +42,7 @@ class SweTrailersDataset(BaseDataset):
         """Load annotation file to get video information."""
         video_infos = json.load(open(self.ann_file,"r"))
         for clip in video_infos:
+            clip["orig_label"] = clip["label"].copy()
             if self.label_as_distribution:
                 p = np.zeros(self.num_classes)
                 for lbl in clip["label"]:
@@ -52,7 +53,7 @@ class SweTrailersDataset(BaseDataset):
             else:
                 lbl = clip["label"][0]
                 clip["label"] = self.label_to_ind(lbl)
-            clip["audio_path"] = join(self.data_prefix,clip["filename"],clip["filename"]+".wav")
+            clip["audio_path"] = join(self.data_prefix,clip["filename"],clip["filename"]+".npy")
         return video_infos
     
     def prepare_train_frames(self, idx):
@@ -114,7 +115,7 @@ class SweTrailersDataset(BaseDataset):
 
         metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
         allowed_metrics = [
-            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy'
+            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy','wasserstein'
         ]
 
         for metric in metrics:
@@ -122,11 +123,17 @@ class SweTrailersDataset(BaseDataset):
                 raise KeyError(f'metric {metric} is not supported')
 
         eval_results = {}
+        #We will save a log file with all the outputs, we assume that the results are ordered
         if not self.label_as_distribution:
             gt_labels = [ann['label'] for ann in self.video_infos]
         else:
             gt_labels = [np.argmax(ann['label']) for ann in self.video_infos]
-
+        gt_filenames = [ann['filename'] for ann in self.video_infos]
+        
+        for pred,gt_label,gt_filename in zip(results,gt_labels,gt_filenames):
+            log_msg = f"Clip: {gt_filename}\n\t Pred: {pred} \n\t GT: {gt_label}"
+            print_log(log_msg, logger=logger)
+        
         for metric in metrics:
             msg = f'Evaluating {metric} ...'
             if logger is None:
@@ -160,5 +167,18 @@ class SweTrailersDataset(BaseDataset):
                 confusion_mat = confusion_matrix(result_argmax,gt_labels)
                 eval_results['confusion_matrix'] = confusion_mat
                 log_msg = f'\nConfusion Matrix:\n{confusion_mat}'
+                print_log(log_msg, logger=logger)
+            elif metric == 'wasserstein':
+                gt_distributions = np.zeros((len(self.video_infos),self.num_classes))
+                for idx,clip in enumerate(self.video_infos):
+                    p = np.zeros(self.num_classes)
+                    for lbl in clip["orig_label"]:
+                        c = self.label_to_ind(lbl)
+                        p[c] += 1
+                    p /= np.sum(p)
+                    gt_distributions[idx] = p
+                w1dist = wasserstein_1_distance(results,gt_distributions,delta_x=4)
+                eval_results['w1dist'] = w1dist
+                log_msg = f'\n Wasserstein-1 Distance:\t{w1dist}'
                 print_log(log_msg, logger=logger)
         return eval_results

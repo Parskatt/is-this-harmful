@@ -1,4 +1,9 @@
-label_as_distribution = False
+label_as_distribution = True
+
+C = [[0.,1,2,8],
+    [.5,0,1,2],
+    [1,.5,0,1],
+    [2,1,.5,0]]#We punish BT->15 the most (weight 8), and 15->BT less (weight 2)
 model = dict(
     type='Recognizer3D',
     backbone=dict(
@@ -35,7 +40,8 @@ model = dict(
         num_classes=4,
         spatial_type='avg',
         dropout_ratio=0.5,
-        label_as_distribution=label_as_distribution))
+        label_as_distribution=label_as_distribution,
+        loss_cls=dict(type='EMDLoss',C=C)))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
 dataset_type = 'SweTrailersDataset'
@@ -122,7 +128,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(
     policy='CosineAnnealing',
-    min_lr=1e-4)
+    min_lr=0.)
 total_epochs = 100
 checkpoint_config = dict(interval=20)
 workflow = [('train', 2),('val', 1)]

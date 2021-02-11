@@ -519,6 +519,6 @@ def average_precision_at_temporal_iou(ground_truth,
     return ap
 
 def wasserstein_1_distance(q,p,delta_x=1.):
-    F,G = np.cumsum(q),np.cumsum(p)
-    d = delta_x*np.abs(F-G).sum()
-    return d
+    F,G = np.cumsum(q,-1),np.cumsum(p,-1)
+    d = delta_x*np.abs(F-G).sum(-1)
+    return d.mean()

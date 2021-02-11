@@ -107,11 +107,13 @@ def main():
 
     # Load eval_config from cfg
     eval_config = cfg.get('eval_config', {})
-    # Overwrite eval_config from args.eval
-    #TODO: This will cause eval_config to have a "None" metric, which doesn't make sense.
-    eval_config = Config._merge_a_into_b(dict(metrics=args.eval), eval_config)
-    # Add options from args.eval_options
-    eval_config = Config._merge_a_into_b(args.eval_options, eval_config)
+    if args.eval:
+        # Overwrite eval_config from args.eval
+        eval_config = Config._merge_a_into_b(
+            dict(metrics=args.eval), eval_config)
+    if args.eval_options:
+        # Add options from args.eval_options
+        eval_config = Config._merge_a_into_b(args.eval_options, eval_config)
 
     assert output_config or eval_config, \
         ('Please specify at least one operation (save or eval the '
