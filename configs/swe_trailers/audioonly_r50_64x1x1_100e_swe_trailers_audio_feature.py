@@ -90,7 +90,7 @@ optimizer = dict(
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0)
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-3)
 total_epochs = 100
 checkpoint_config = dict(interval=20)
 evaluation = dict(
@@ -106,4 +106,4 @@ log_level = 'INFO'
 work_dir = ('./work_dirs/audioonly_r50_64x1x1_100e_swe_trailers_audio_feature/')
 load_from = None
 resume_from = None
-workflow = [('train', 2),('val',1)]
+workflow = [('train', 1),('val',1)]

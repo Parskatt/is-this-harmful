@@ -98,12 +98,12 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.01/8, momentum=0.9,
+    type='SGD', lr=0.01, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 1 gpu
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=.001)#TODO: just doing this to prevent lr decay when doing few epochs 
-total_epochs = 20
+total_epochs = 100
 checkpoint_config = dict(interval=20)
 workflow = [('train', 1),('val',1)]
 evaluation = dict(
@@ -116,7 +116,7 @@ log_config = dict(
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/slowonly_swe_trailers_CE'
-#https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth
-load_from = 'slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
+#
+load_from = 'https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
 resume_from = None
 find_unused_parameters = False

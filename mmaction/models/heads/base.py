@@ -78,9 +78,8 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
             and 'top1_acc', 'top5_acc'(optional).
         """
         losses = dict()
-        if labels.shape == torch.Size([]):
+        if labels.shape == torch.Size([]) or (self.label_as_distribution and len(labels.shape)==1):
             labels = labels.unsqueeze(0)
-
         if not self.multi_class:
             if self.label_as_distribution:
                 top_labels = labels.argmax(dim=-1)

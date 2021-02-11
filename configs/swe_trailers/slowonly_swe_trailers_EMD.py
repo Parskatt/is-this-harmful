@@ -116,6 +116,6 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/slowonly_swe_trailers_EMD'
 #https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth
-load_from = 'slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
+load_from = 'https://download.openmmlab.com/mmaction/recognition/slowonly/slowonly_r50_8x8x1_256e_kinetics400_rgb/slowonly_r50_8x8x1_256e_kinetics400_rgb_20200703-a79c555a.pth'
 resume_from = None
 find_unused_parameters = False
