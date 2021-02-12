@@ -128,7 +128,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(
     policy='CosineAnnealing',
-    min_lr=1e-3)
+    min_lr=0.)
 total_epochs = 100
 checkpoint_config = dict(interval=20)
 workflow = [('train', 1),('val', 1)]#
@@ -141,7 +141,7 @@ log_config = dict(
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/slowfast_r50_3d_8x8x1_256e_swe_trailers'
+work_dir = './work_dirs/slowfast_swe_trailers_EMD'
 #"https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth"
 load_from="https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth"
 resume_from = None

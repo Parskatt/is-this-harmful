@@ -1,4 +1,9 @@
 label_as_distribution = True
+C = [[0.,1,2,8],
+    [.5,0,1,2],
+    [1,.5,0,1],
+    [2,1,.5,0]]#We punish BT->15 the most (weight 8), and 15->BT less (weight 2)
+
 model = dict(
     type='Recognizer3D',
     backbone=dict(
@@ -18,7 +23,7 @@ model = dict(
         spatial_type='avg',
         dropout_ratio=0.5,
         label_as_distribution = label_as_distribution,
-        loss_cls=dict(type='EMDLoss',C=[[0.,1,2,3],[1,0,1,2],[2,1,0,1],[3,2,1,0]])))
+        loss_cls=dict(type='EMDLoss',C=C)))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
 dataset_type = 'SweTrailersDataset'
@@ -61,13 +66,13 @@ val_pipeline = [
 test_pipeline = [
     dict(
         type='SampleFrames',
-        clip_len=8,
+        clip_len=16,
         frame_interval=16,
         num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
-    dict(type='ThreeCrop', crop_size=256),
+    dict(type='CenterCrop', crop_size=256),
     dict(type='Flip', flip_ratio=0),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW'),
@@ -97,16 +102,16 @@ data = dict(
         label_as_distribution = label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.01/8, momentum=0.9,
-    weight_decay=0.0001)  # this lr is used for 8 gpus
+    type='SGD', lr=0.01, momentum=0.9,
+    weight_decay=0.0001)  # this lr is used for 1 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 256
-checkpoint_config = dict(interval=100)
+lr_config = dict(policy='CosineAnnealing', min_lr=0.)
+total_epochs = 100
+checkpoint_config = dict(interval=20)
 workflow = [('train', 1),('val',1)]
 evaluation = dict(
-    interval=5, metrics=['top_ksadasd_accuracy', 'mean_class_accuracy'])
+    interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 log_config = dict(
     interval=20,
     hooks=[

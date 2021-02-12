@@ -62,14 +62,13 @@ val_pipeline = [
 test_pipeline = [
     dict(
         type='SampleFrames',
-        clip_len=8,
+        clip_len=16,
         frame_interval=16,
-        num_clips=3,
+        num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
-    dict(type='ThreeCrop', crop_size=256),
-    dict(type='Flip', flip_ratio=0),
+    dict(type='CenterCrop', crop_size=256),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -102,7 +101,7 @@ optimizer = dict(
     weight_decay=0.0001)  # this lr is used for 1 gpu
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=.001)#TODO: just doing this to prevent lr decay when doing few epochs 
+lr_config = dict(policy='CosineAnnealing', min_lr=0.)
 total_epochs = 100
 checkpoint_config = dict(interval=20)
 workflow = [('train', 1),('val',1)]
