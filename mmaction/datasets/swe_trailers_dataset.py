@@ -132,7 +132,7 @@ class SweTrailersDataset(BaseDataset):
         
         for pred,gt_label,gt_filename in zip(results,gt_labels,gt_filenames):
             log_msg = f"Clip: {gt_filename}\n\t Pred: {pred} \n\t GT: {gt_label}"
-            print_log(log_msg, logger=logger)
+            #print_log(log_msg, logger=logger)
         
         for metric in metrics:
             msg = f'Evaluating {metric} ...'
