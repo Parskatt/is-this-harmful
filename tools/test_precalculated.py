@@ -118,7 +118,11 @@ def main():
     # build the dataloader
     dataset = build_dataset(cfg.data.test, dict(test_mode=True))
     rank, _ = get_dist_info()
-    outputs = list(np.array([load(result) for result in args.results]).mean(0))
+    if os.path.isdir(args.results[0]):
+        results = [os.path.join(args.results[0],result) for result in os.listdir(args.results[0])]
+    else:
+        results = args.results
+    outputs = list(np.array([load(result) for result in results]).mean(0))
     if rank == 0:
         if eval_config:
             eval_res = dataset.evaluate(outputs, **eval_config)

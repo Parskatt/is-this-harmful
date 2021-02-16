@@ -135,7 +135,7 @@ log_config = dict(
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/slowfast_r50_3d_8x8x1_256e_swe_trailers'
+work_dir = './work_dirs/slowfast_swe_trailers_CE'
 load_from="https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth"
 resume_from = None
 find_unused_parameters = False

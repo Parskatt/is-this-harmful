@@ -98,7 +98,7 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = ('./work_dirs/audioonly_t18_64x1x1_100e_swe_trailers_audio_feature/')
+work_dir = ('./work_dirs/tsn_r18_swe_trailers_audio_feature_CE/')
 load_from = "https://download.openmmlab.com/mmaction/recognition/audio_recognition/tsn_r18_64x1x1_100e_kinetics400_audio_feature/tsn_r18_64x1x1_100e_kinetics400_audio_feature_20201012-bf34df6c.pth"
 resume_from = None
 workflow = [('train', 1),('val',1)]
