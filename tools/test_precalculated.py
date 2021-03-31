@@ -13,7 +13,7 @@ from mmcv.fileio.io import file_handlers
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmcv.runner.fp16_utils import wrap_fp16_model
-
+from mmcv.utils import get_logger
 from mmaction.apis import multi_gpu_test, single_gpu_test
 from mmaction.datasets import build_dataloader, build_dataset
 from mmaction.models import build_model
@@ -123,9 +123,10 @@ def main():
     else:
         results = args.results
     outputs = list(np.array([load(result) for result in results]).mean(0))
+    logger = get_logger(__name__,log_file="-".join([os.path.basename(result).split('.')[0] for result in results]))
     if rank == 0:
         if eval_config:
-            eval_res = dataset.evaluate(outputs, **eval_config)
+            eval_res = dataset.evaluate(outputs, **eval_config, logger=logger)
 
 
 if __name__ == '__main__':

@@ -522,3 +522,18 @@ def wasserstein_1_distance(q,p,delta_x=1.):
     F,G = np.cumsum(q,-1),np.cumsum(p,-1)
     d = delta_x*np.abs(F-G).sum(-1)
     return d.mean()
+
+def euclidean_distance(q,p,delta_x=1.):
+    q,p = np.array(q),np.array(p)
+    B,C = q.shape
+    x = delta_x*np.linspace(0,C,C)
+    mu_q = (x*q).sum(axis=1)
+    mu_p = (x*p).sum(axis=1)
+    d = np.abs(mu_q-mu_p)
+    return d.mean()
+
+def KL(q,p,eps=1e-8):
+    q = np.array(q)
+    log_q = np.log(q)
+    loss_kl = (p*np.log(p+eps)-p*log_q).sum(axis=-1).mean()
+    return loss_kl

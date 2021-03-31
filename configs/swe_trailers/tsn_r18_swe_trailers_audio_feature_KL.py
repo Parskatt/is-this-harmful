@@ -1,4 +1,8 @@
-label_as_distribution = False
+label_as_distribution = True
+C = [[0.,1,2,8],
+    [.5,0,1,2],
+    [1,.5,0,1],
+    [2,1,.5,0]]
 # model settings
 model = dict(
     type='AudioRecognizer',
@@ -8,7 +12,9 @@ model = dict(
         num_classes=4,
         in_channels=512,
         dropout_ratio=0.5,
-        init_std=0.01))
+        init_std=0.01,
+        label_as_distribution=label_as_distribution,
+    loss_cls=dict(type='KLDivergenceLoss')))
 
 # model training and testing settings
 train_cfg = None
@@ -81,7 +87,7 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.001, momentum=0.9,
+    type='SGD', lr=0.01, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
@@ -98,7 +104,7 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = ('./work_dirs/tsn_r18_swe_trailers_audio_feature_CE/')
+work_dir = ('./work_dirs/tsn_r18_swe_trailers_audio_feature_KL/')
 load_from = "https://download.openmmlab.com/mmaction/recognition/audio_recognition/tsn_r18_64x1x1_100e_kinetics400_audio_feature/tsn_r18_64x1x1_100e_kinetics400_audio_feature_20201012-bf34df6c.pth"
 resume_from = None
 workflow = [('train', 1),('val',1)]

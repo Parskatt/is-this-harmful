@@ -11,7 +11,7 @@ from ..core import mean_average_precision
 from .base import BaseDataset
 from .registry import DATASETS
 
-from ..core import (mean_class_accuracy,top_k_accuracy,confusion_matrix,wasserstein_1_distance)
+from ..core import (mean_class_accuracy,top_k_accuracy,confusion_matrix,wasserstein_1_distance,KL,euclidean_distance)
 
 
 
@@ -115,7 +115,7 @@ class SweTrailersDataset(BaseDataset):
 
         metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
         allowed_metrics = [
-            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy','wasserstein'
+            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy','wasserstein','KL','euclidean'
         ]
 
         for metric in metrics:
@@ -129,10 +129,10 @@ class SweTrailersDataset(BaseDataset):
         else:
             gt_labels = [np.argmax(ann['label']) for ann in self.video_infos]
         gt_filenames = [ann['filename'] for ann in self.video_infos]
-        
+        log_msg = ""
         for pred,gt_label,gt_filename in zip(results,gt_labels,gt_filenames):
-            log_msg = f"Clip: {gt_filename}\n\t Pred: {pred} \n\t GT: {gt_label}"
-            print_log(log_msg, logger=logger)
+            log_msg += f"Clip: {gt_filename}\n\t Pred: {pred} \n\t GT: {gt_label}\n"
+        print_log(log_msg, logger=logger)
         
         for metric in metrics:
             msg = f'Evaluating {metric} ...'
@@ -180,5 +180,31 @@ class SweTrailersDataset(BaseDataset):
                 w1dist = wasserstein_1_distance(results,gt_distributions,delta_x=4)
                 eval_results['w1dist'] = w1dist
                 log_msg = f'\n Wasserstein-1 Distance:\t{w1dist}'
+                print_log(log_msg, logger=logger)
+            elif metric == 'euclidean':
+                gt_distributions = np.zeros((len(self.video_infos),self.num_classes))
+                for idx,clip in enumerate(self.video_infos):
+                    p = np.zeros(self.num_classes)
+                    for lbl in clip["orig_label"]:
+                        c = self.label_to_ind(lbl)
+                        p[c] += 1
+                    p /= np.sum(p)
+                    gt_distributions[idx] = p
+                eucl = euclidean_distance(results,gt_distributions,delta_x=4)
+                eval_results['euclidean'] = eucl
+                log_msg = f'\n Euclidean Distance:\t{eucl}'
+                print_log(log_msg, logger=logger)
+            elif metric == 'KL':
+                gt_distributions = np.zeros((len(self.video_infos),self.num_classes))
+                for idx,clip in enumerate(self.video_infos):
+                    p = np.zeros(self.num_classes)
+                    for lbl in clip["orig_label"]:
+                        c = self.label_to_ind(lbl)
+                        p[c] += 1
+                    p /= np.sum(p)
+                    gt_distributions[idx] = p
+                KL_div = KL(results,gt_distributions)
+                eval_results['KL'] = KL_div
+                log_msg = f'\n KL-divergence:\t{KL_div}'
                 print_log(log_msg, logger=logger)
         return eval_results
