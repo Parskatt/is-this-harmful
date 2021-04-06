@@ -4,7 +4,7 @@ from .augmentations import (AudioAmplify, CenterCrop, ColorJitter,
                             MelSpectrogram, MultiGroupCrop, MultiScaleCrop,
                             Normalize, RandomCrop, RandomRescale,
                             RandomResizedCrop, RandomScale, Resize, TenCrop,
-                            ThreeCrop, AudioNormalize)
+                            ThreeCrop, AudioNormalize, SpecAugment)
 from .compose import Compose
 from .formating import (Collect, FormatAudioShape, FormatShape, ImageToTensor,
                         ToDataContainer, ToTensor, Transpose)
@@ -32,5 +32,6 @@ __all__ = [
     'FormatAudioShape', 'LoadAudioFeature', 'AudioFeatureSelector',
     'AudioDecodeInit', 'EntityBoxPad', 'EntityBoxFlip', 'EntityBoxCrop',
     'EntityBoxRescale', 'EntityBoxClip', 'RandomScale', 'ImageDecode',
-    'BuildPseudoClip', 'RandomRescale', 'PyAVDecodeMotionVector', 'AudioNormalize'
+    'BuildPseudoClip', 'RandomRescale', 'PyAVDecodeMotionVector', 'AudioNormalize',
+    'SpecAugment'
 ]

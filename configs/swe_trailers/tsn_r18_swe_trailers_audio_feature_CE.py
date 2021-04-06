@@ -24,8 +24,9 @@ ann_file_test = 'data/swe_trailers/test.json'
 train_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(type='SampleFrames', clip_len=128, frame_interval=1, num_clips=1),
-    dict(type='AudioFeatureSelector'),
+    dict(type='AudioFeatureSelector',fixed_length=300),
     dict(type='AudioNormalize'),
+    dict(type='SpecAugment'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['audios'])
@@ -34,11 +35,11 @@ val_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(
         type='SampleFrames',
-        clip_len=128,
+        clip_len=200,
         frame_interval=1,
         num_clips=1,
         test_mode=True),
-    dict(type='AudioFeatureSelector'),
+    dict(type='AudioFeatureSelector',fixed_length=500),
     dict(type='AudioNormalize'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
@@ -48,11 +49,11 @@ test_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(
         type='SampleFrames',
-        clip_len=128,
+        clip_len=200,
         frame_interval=1,
-        num_clips=4,
+        num_clips=2,
         test_mode=True),
-    dict(type='AudioFeatureSelector'),
+    dict(type='AudioFeatureSelector',fixed_length=500),
     dict(type='AudioNormalize'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
@@ -60,7 +61,7 @@ test_pipeline = [
 ]
 data = dict(
     videos_per_gpu=16,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
@@ -81,13 +82,14 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.001, momentum=0.9,
-    weight_decay=0.0001)  # this lr is used for 8 gpus
+    type='SGD', lr=0.01, momentum=0.9,
+    weight_decay=0.0001)
+
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0.)
-total_epochs = 100
-checkpoint_config = dict(interval=20)
+total_epochs = 20
+checkpoint_config = dict(interval=5)
 evaluation = dict(
     interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 log_config = dict(

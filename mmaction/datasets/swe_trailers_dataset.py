@@ -130,8 +130,8 @@ class SweTrailersDataset(BaseDataset):
             gt_labels = [np.argmax(ann['label']) for ann in self.video_infos]
         gt_filenames = [ann['filename'] for ann in self.video_infos]
         log_msg = ""
-        for pred,gt_label,gt_filename in zip(results,gt_labels,gt_filenames):
-            log_msg += f"Clip: {gt_filename}\n\t Pred: {pred} \n\t GT: {gt_label}\n"
+        for pred,ann in zip(results,self.video_infos):
+            log_msg += f"Clip: {ann['filename']}\n\t Pred: {pred} \n\t GT: {ann['label']}\n"
         print_log(log_msg, logger=logger)
         
         for metric in metrics:
@@ -142,15 +142,14 @@ class SweTrailersDataset(BaseDataset):
 
             if metric == 'top_k_accuracy':
                 topk = metric_options.setdefault('top_k_accuracy',
-                                                    {}).setdefault(
-                                                        'topk', (1, 5))
+                                                    {}).setdefault('topk', (1, 5))
                 if not isinstance(topk, (int, tuple)):
                     raise TypeError('topk must be int or tuple of int, '
                                     f'but got {type(topk)}')
                 if isinstance(topk, int):
                     topk = (topk, )
 
-                top_k_acc = top_k_accuracy(results, gt_labels, topk)
+                top_k_acc = top_k_accuracy(results, gt_labels, (1,2))
                 log_msg = []
                 for k, acc in zip(topk, top_k_acc):
                     eval_results[f'top{k}_acc'] = acc

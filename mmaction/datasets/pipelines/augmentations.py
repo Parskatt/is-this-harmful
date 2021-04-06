@@ -1543,7 +1543,37 @@ class AudioNormalize:
         results['audios'] = (results['audios']-self.mu)/self.sigma
         return results
 
+@PIPELINES.register_module()
+class SpecAugment:
+    def __init__(self,frequency_masking_para=27,
+                 time_masking_para=100, frequency_mask_num=2, time_mask_num=1):
+        self.frequency_masking_para = frequency_masking_para
+        self.time_masking_para = time_masking_para
+        self.frequency_mask_num = frequency_mask_num
+        self.time_mask_num = time_mask_num
+    def __call__(self,results):
+        assert 'audios' in results,"could not find 'audios' key in results"
+        warped_mel_spectrogram = results['audios'].transpose(0,2,1)
+        v = warped_mel_spectrogram.shape[1]
+        tau = warped_mel_spectrogram.shape[2]
 
+        # Step 2 : Frequency masking
+        for i in range(self.frequency_mask_num):
+            f = np.random.uniform(low=0.0, high=self.frequency_masking_para)
+            f = int(f)
+            f0 = random.randint(0, v-f)
+            warped_mel_spectrogram[:, f0:f0+f, :] = 0
+
+        # Step 3 : Time masking
+        for i in range(self.time_mask_num):
+            t = np.random.uniform(low=0.0, high=self.time_masking_para)
+            t = int(t)
+            t0 = random.randint(0, tau-t)
+            warped_mel_spectrogram[:, :, t0:t0+t] = 0
+        
+        results['audios'] = warped_mel_spectrogram.transpose(0,2,1)
+
+        return results
 
 
 @PIPELINES.register_module()
