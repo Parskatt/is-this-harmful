@@ -85,8 +85,11 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
                 top_labels = labels.argmax(dim=-1)
             else:
                 top_labels = labels
-            top_k_acc = top_k_accuracy(cls_score.detach().cpu().numpy(),
-                                       top_labels.detach().cpu().numpy(), (1, 5))
+            try:
+                top_k_acc = top_k_accuracy(cls_score.detach().cpu().numpy(),
+                                           top_labels.detach().cpu().numpy(), (1, 5))
+            except:
+                print("hej")
             losses['top1_acc'] = torch.tensor(
                 top_k_acc[0], device=cls_score.device)
             losses['top5_acc'] = torch.tensor(

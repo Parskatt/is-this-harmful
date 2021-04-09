@@ -17,10 +17,11 @@ class AudioRecognizer(BaseRecognizer):
 
     def forward_train(self, audios, labels):
         """Defines the computation performed at every call when training."""
+        b,clips,c,t,f = audios.shape
         audios = audios.reshape((-1, ) + audios.shape[2:])
         x = self.extract_feat(audios)
         cls_score = self.cls_head(x)
-        gt_labels = labels.squeeze()
+        gt_labels = labels.repeat(clips, 1)
         loss = self.cls_head.loss(cls_score, gt_labels)
 
         return loss
