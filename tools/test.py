@@ -15,6 +15,7 @@ from mmcv.runner.fp16_utils import wrap_fp16_model
 from mmaction.apis import multi_gpu_test, single_gpu_test
 from mmaction.datasets import build_dataloader, build_dataset
 from mmaction.models import build_model
+from mmcv.utils import get_logger
 
 
 def parse_args():
@@ -97,7 +98,6 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
-
     cfg.merge_from_dict(args.cfg_options)
 
     # Load output_config from cfg
@@ -180,13 +180,17 @@ def main():
                                  args.gpu_collect)
 
     rank, _ = get_dist_info()
+    logfile = os.path.splitext(os.path.basename(args.config))[0]+"_"+os.path.splitext(os.path.basename(args.checkpoint))[0]
+
+    logger = get_logger(__name__,log_file=logfile)
+
     if rank == 0:
         if output_config.get('out', None):
             out = output_config['out']
             print(f'\nwriting results to {out}')
             dataset.dump_results(outputs, **output_config)
         if eval_config:
-            eval_res = dataset.evaluate(outputs, **eval_config)
+            eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)
             #for name, val in eval_res.items():
             #    print(f'{name}: {val}')
 
