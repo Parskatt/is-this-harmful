@@ -100,8 +100,8 @@ test_pipeline = [
 #    dict(type='Flip', flip_ratio=0),
 
 data = dict(
-    videos_per_gpu=4,
-    workers_per_gpu=4,
+    videos_per_gpu=8,
+    workers_per_gpu=8,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
@@ -129,7 +129,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 lr_config = dict(
     policy='CosineAnnealing',
     min_lr=1e-4)
-total_epochs = 10
+total_epochs = 100
 checkpoint_config = dict(interval=10)
 workflow = [('train', 1),('val', 1)]#
 evaluation = dict(

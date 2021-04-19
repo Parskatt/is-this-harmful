@@ -1,5 +1,4 @@
 label_as_distribution = True
-class_weight = [1,1,1,1]
 # model settings
 model = dict(
     type='AudioRecognizer',
@@ -11,7 +10,7 @@ model = dict(
         dropout_ratio=0.5,
         init_std=0.01,
         label_as_distribution=label_as_distribution,
-    loss_cls=dict(type='KLDivergenceLoss',class_weight=class_weight)))
+    loss_cls=dict(type='KLDivergenceLoss')))
 
 # model training and testing settings
 train_cfg = None
@@ -70,13 +69,15 @@ data = dict(
         ann_file=ann_file_train,
         data_prefix=data_root,
         pipeline=train_pipeline,
-        label_as_distribution=label_as_distribution),
+        label_as_distribution=label_as_distribution,
+        sample_by_class=True),
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
         data_prefix=data_root_val,
         pipeline=val_pipeline,
-        label_as_distribution=label_as_distribution),
+        label_as_distribution=label_as_distribution,
+        sample_by_class=True),
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
@@ -85,13 +86,13 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.001, momentum=0.9,
+    type='SGD', lr=0.0005, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=1e-4)
 total_epochs = 100
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=10)
 evaluation = dict(
     interval=10, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 log_config = dict(
@@ -102,7 +103,7 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = ('./work_dirs/tsn_r18_swe_trailers_audio_feature_KL/')
+work_dir = ('./work_dirs/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/')
 load_from = "https://download.openmmlab.com/mmaction/recognition/audio_recognition/tsn_r18_64x1x1_100e_kinetics400_audio_feature/tsn_r18_64x1x1_100e_kinetics400_audio_feature_20201012-bf34df6c.pth"
 resume_from = None
 workflow = [('train', 1),('val',1)]
