@@ -122,11 +122,16 @@ def main():
         results = [os.path.join(args.results[0],result) for result in os.listdir(args.results[0])]
     else:
         results = args.results
-    outputs = list(np.array([load(result) for result in results]).mean(0))
+    outs = np.array([load(result) for result in results])
+    #outs = np.cumprod(outs,0)[-1]
+    outs = (outs).mean(0)
+    #outs /= outs.sum(1,keepdims=True)
+    #print(outs.shape)
+    outputs = list(outs)#np.array([load(result) for result in results]).mean(0)
     logger = get_logger(__name__,log_file="-".join([os.path.basename(result).split('.')[0] for result in results]))
     if rank == 0:
         if eval_config:
-            eval_res = dataset.evaluate(outputs, **eval_config, logger=logger)
+            eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)
 
 
 if __name__ == '__main__':

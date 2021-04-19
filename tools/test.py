@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
         '--out',
-        default=None,
+        action='store_true',
         help='output result file in pkl/yaml/json format')
     parser.add_argument(
         '--fuse-conv-bn',
@@ -103,7 +103,7 @@ def main():
     # Load output_config from cfg
     output_config = cfg.get('output_config', {})
     # Overwrite output_config from args.out
-    output_config = Config._merge_a_into_b(dict(out=args.out), output_config)
+    #output_config = Config._merge_a_into_b(dict(out=args.out), output_config)
 
     # Load eval_config from cfg
     eval_config = cfg.get('eval_config', {})
@@ -181,14 +181,13 @@ def main():
 
     rank, _ = get_dist_info()
     logfile = os.path.splitext(os.path.basename(args.config))[0]+"_"+os.path.splitext(os.path.basename(args.checkpoint))[0]
-
+    result_file = "results_"+logfile+".json"
     logger = get_logger(__name__,log_file=logfile)
 
     if rank == 0:
-        if output_config.get('out', None):
-            out = output_config['out']
-            print(f'\nwriting results to {out}')
-            dataset.dump_results(outputs, **output_config)
+        if args.out:
+            print(f'\nwriting results to {result_file}')
+            dataset.dump_results(outputs, result_file)
         if eval_config:
             eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)
             #for name, val in eval_res.items():
