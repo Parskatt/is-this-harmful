@@ -527,10 +527,20 @@ def euclidean_distance(q,p,delta_x=1.):
     q,p = np.array(q),np.array(p)
     B,C = q.shape
     x = delta_x*np.linspace(0,C,C)
-    mu_q = (x*q).sum(axis=1)
-    mu_p = (x*p).sum(axis=1)
+    mu_q = (x*q).sum(axis=1,keepdims=True)
+    mu_p = (x*p).sum(axis=1,keepdims=True)
     d = np.abs(mu_q-mu_p)
     return d.mean()
+
+def class_euclidean_distance(q,p,delta_x=1.):
+    q,p = np.array(q),np.array(p)
+    B,C = q.shape
+    x = delta_x*np.linspace(0,C,C)
+    mu_q = (x*q).sum(axis=1,keepdims=True)
+    mu_p = (x*p).sum(axis=1,keepdims=True)
+    d = np.abs(mu_q-mu_p)
+    return (d*p).mean(0)/(p.mean(0))
+
 
 def KL(q,p,eps=1e-8):
     q = np.array(q)
