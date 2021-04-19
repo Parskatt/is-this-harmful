@@ -3,7 +3,6 @@ import os
 import os.path as osp
 import shutil
 import warnings
-from scipy import interpolate
 import mmcv
 import numpy as np
 import torch
