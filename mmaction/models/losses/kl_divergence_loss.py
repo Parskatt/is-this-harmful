@@ -8,8 +8,9 @@ from .base import BaseWeightedLoss
 class KLDivergenceLoss(BaseWeightedLoss):
     """ Forward KL-divergence loss
     """
-    def __init__(self,loss_weight=1.):
+    def __init__(self,loss_weight=1.,class_weight=None):
         super().__init__(loss_weight)
+        self.class_weight = class_weight
     def _forward(self, cls_score, p, eps=1e-8,**kwargs):
         """Calculate the forward KL-divergence between soft labels (p) and class scores.
             q = exp(cls_score)/∫exp(cls_score)
@@ -22,7 +23,10 @@ class KLDivergenceLoss(BaseWeightedLoss):
         Returns:
                 torch.Tensor: Mean forward KL-divergence over the batch .
         """
-        #
+        if self.class_weight:
+            cw = torch.tensor(self.class_weight,device=cls_score.device)[None]
+        else:
+            cw = 1.
         log_q = cls_score.log_softmax(dim=-1)
-        loss_kl = (p*(p+eps).log()-p*log_q).sum(dim=-1).mean() #TODO: make reduction method optional
+        loss_kl = (cw*(p*(p+eps).log()-p*log_q)).sum(dim=-1).mean() #TODO: make reduction method optional
         return loss_kl
