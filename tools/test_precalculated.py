@@ -128,7 +128,7 @@ def main():
     #outs /= outs.sum(1,keepdims=True)
     #print(outs.shape)
     outputs = list(outs)#np.array([load(result) for result in results]).mean(0)
-    logger = get_logger(__name__,log_file="-".join([os.path.basename(result).split('.')[0] for result in results]))
+    logger = get_logger(__name__,log_file="eval_logs/"+"-".join([os.path.basename(result).split('.')[0] for result in results]))
     if rank == 0:
         if eval_config:
             eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)

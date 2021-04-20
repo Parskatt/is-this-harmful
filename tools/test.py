@@ -181,8 +181,8 @@ def main():
 
     rank, _ = get_dist_info()
     logfile = os.path.splitext(os.path.basename(args.config))[0]+"_"+os.path.splitext(os.path.basename(args.checkpoint))[0]
-    result_file = "results_"+logfile+".json"
-    logger = get_logger(__name__,log_file=logfile)
+    result_file = "results/"+logfile+".json"
+    logger = get_logger(__name__,log_file="eval_logs/"+logfile)
 
     if rank == 0:
         if args.out:
