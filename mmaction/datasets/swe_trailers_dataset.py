@@ -13,7 +13,8 @@ from .base import BaseDataset
 from .registry import DATASETS
 
 from ..core import (mean_class_accuracy, top_k_accuracy, confusion_matrix,
-                    wasserstein_1_distance, KL, euclidean_distance, class_euclidean_distance)
+                    wasserstein_1_distance, KL, euclidean_distance, 
+                    class_euclidean_distance,mean_class_euclidean_distance)
 import random
 
 @DATASETS.register_module()
@@ -55,7 +56,7 @@ class SweTrailersDataset(BaseDataset):
                 p /= np.sum(p)
                 clip["label"] = p
             else:
-                lbl = clip["label"][0]
+                lbl = random.choice(clip["label"])#[0]
                 clip["label"] = self.label_to_ind(lbl)
             clip["audio_path"] = join(
                 self.data_prefix, clip["filename"], clip["filename"]+".npy")
@@ -132,7 +133,9 @@ class SweTrailersDataset(BaseDataset):
 
         metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
         allowed_metrics = [
-            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy', 'wasserstein', 'KL', 'euclidean', 'class_euclidean'
+            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy', 
+            'wasserstein', 'KL', 'euclidean', 
+            'class_euclidean','mean_class_euclidean'
         ]
 
         for metric in metrics:
@@ -150,13 +153,21 @@ class SweTrailersDataset(BaseDataset):
         for pred, ann in zip(results, self.video_infos):
             log_msg += f"Clip: {ann['filename']}\n\t Pred: {pred} \n\t GT: {ann['label']}\n"
         print_log(log_msg, logger=logger)
+        gt_distributions = np.zeros(
+            (len(self.video_infos), self.num_classes))
+        for idx, clip in enumerate(self.video_infos):
+            p = np.zeros(self.num_classes)
+            for lbl in clip["orig_label"]:
+                c = self.label_to_ind(lbl)
+                p[c] += 1
+            p /= np.sum(p)
+            gt_distributions[idx] = p
 
         for metric in metrics:
             msg = f'Evaluating {metric} ...'
             if logger is None:
                 msg = '\n' + msg
             print_log(msg, logger=logger)
-
             if metric == 'top_k_accuracy':
                 topk = metric_options.setdefault('top_k_accuracy',
                                                  {}).setdefault('topk', (1, 5))
@@ -166,7 +177,7 @@ class SweTrailersDataset(BaseDataset):
                 if isinstance(topk, int):
                     topk = (topk, )
 
-                top_k_acc = top_k_accuracy(results, gt_labels, (1, 2))
+                top_k_acc = top_k_accuracy(results, gt_labels, topk)
                 log_msg = []
                 for k, acc in zip(topk, top_k_acc):
                     eval_results[f'top{k}_acc'] = acc
@@ -185,59 +196,29 @@ class SweTrailersDataset(BaseDataset):
                 log_msg = f'\nConfusion Matrix:\n{confusion_mat}'
                 print_log(log_msg, logger=logger)
             elif metric == 'wasserstein':
-                gt_distributions = np.zeros(
-                    (len(self.video_infos), self.num_classes))
-                for idx, clip in enumerate(self.video_infos):
-                    p = np.zeros(self.num_classes)
-                    for lbl in clip["orig_label"]:
-                        c = self.label_to_ind(lbl)
-                        p[c] += 1
-                    p /= np.sum(p)
-                    gt_distributions[idx] = p
                 w1dist = wasserstein_1_distance(
                     results, gt_distributions, delta_x=4)
                 eval_results['w1dist'] = w1dist
                 log_msg = f'\n Wasserstein-1 Distance:\t{w1dist}'
                 print_log(log_msg, logger=logger)
             elif metric == 'class_euclidean':
-                gt_distributions = np.zeros(
-                    (len(self.video_infos), self.num_classes))
-                for idx, clip in enumerate(self.video_infos):
-                    p = np.zeros(self.num_classes)
-                    for lbl in clip["orig_label"]:
-                        c = self.label_to_ind(lbl)
-                        p[c] += 1
-                    p /= np.sum(p)
-                    gt_distributions[idx] = p
-                eucl = class_euclidean_distance(
+                c_eucl = class_euclidean_distance(
                     results, gt_distributions, delta_x=4)
-                eval_results['class_euclidean'] = eucl
-                log_msg = f'\n Class Euclidean Distance:\t{eucl}'
+                eval_results['class_euclidean'] = c_eucl
+                log_msg = f'\n Class Euclidean Distance:\t{c_eucl}'
+                print_log(log_msg, logger=logger)
+            elif metric == 'mean_class_euclidean':
+                m_eucl = mean_class_euclidean_distance(
+                    results, gt_distributions, delta_x=4)
+                eval_results['class_euclidean'] = m_eucl
+                log_msg = f'\n Mean Class Euclidean Distance:\t{m_eucl}'
                 print_log(log_msg, logger=logger)
             elif metric == 'euclidean':
-                gt_distributions = np.zeros(
-                    (len(self.video_infos), self.num_classes))
-                for idx, clip in enumerate(self.video_infos):
-                    p = np.zeros(self.num_classes)
-                    for lbl in clip["orig_label"]:
-                        c = self.label_to_ind(lbl)
-                        p[c] += 1
-                    p /= np.sum(p)
-                    gt_distributions[idx] = p
                 eucl = euclidean_distance(results, gt_distributions, delta_x=4)
                 eval_results['euclidean'] = eucl
                 log_msg = f'\n Euclidean Distance:\t{eucl}'
                 print_log(log_msg, logger=logger)
             elif metric == 'KL':
-                gt_distributions = np.zeros(
-                    (len(self.video_infos), self.num_classes))
-                for idx, clip in enumerate(self.video_infos):
-                    p = np.zeros(self.num_classes)
-                    for lbl in clip["orig_label"]:
-                        c = self.label_to_ind(lbl)
-                        p[c] += 1
-                    p /= np.sum(p)
-                    gt_distributions[idx] = p
                 KL_div = KL(results, gt_distributions)
                 eval_results['KL'] = KL_div
                 log_msg = f'\n KL-divergence:\t{KL_div}'

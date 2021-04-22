@@ -541,6 +541,8 @@ def class_euclidean_distance(q,p,delta_x=1.):
     d = np.abs(mu_q-mu_p)
     return (d*p).mean(0)/(p.mean(0))
 
+def mean_class_euclidean_distance(q,p,delta_x=1.):
+    return class_euclidean_distance(q,p,delta_x).mean()
 
 def KL(q,p,eps=1e-8):
     q = np.array(q)

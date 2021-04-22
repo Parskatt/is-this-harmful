@@ -21,8 +21,7 @@ class AudioRecognizer(BaseRecognizer):
         audios = audios.reshape((-1, ) + audios.shape[2:])
         x = self.extract_feat(audios)
         cls_score = self.cls_head(x)
-        gt_labels = labels.repeat(clips, 1)
-        loss = self.cls_head.loss(cls_score, gt_labels)
+        loss = self.cls_head.loss(cls_score, labels)
 
         return loss
 
