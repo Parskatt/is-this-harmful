@@ -33,7 +33,8 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
                  train_cfg=None,
                  test_cfg=None):
         super().__init__()
-        self.backbone = builder.build_backbone(backbone)
+        if backbone is not None:
+            self.backbone = builder.build_backbone(backbone)
         if neck is not None:
             self.neck = builder.build_neck(neck)
         self.cls_head = builder.build_head(cls_head)
@@ -54,7 +55,8 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
 
     def init_weights(self):
         """Initialize the model network weights."""
-        self.backbone.init_weights()
+        if hasattr(self,'backbone'):
+            self.backbone.init_weights()
         self.cls_head.init_weights()
         if hasattr(self, 'neck'):
             self.neck.init_weights()

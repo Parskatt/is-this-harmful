@@ -7,8 +7,9 @@ from .tpn_head import TPNHead
 from .tsm_head import TSMHead
 from .tsn_head import TSNHead
 from .x3d_head import X3DHead
+from .fusion_head import FusionHead
 
 __all__ = [
     'TSNHead', 'I3DHead', 'BaseHead', 'TSMHead', 'SlowFastHead', 'SSNHead',
-    'TPNHead', 'AudioTSNHead', 'X3DHead'
+    'TPNHead', 'AudioTSNHead', 'X3DHead','FusionHead'
 ]

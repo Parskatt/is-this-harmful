@@ -81,7 +81,7 @@ test_pipeline = [
         type='SampleFrames',
         clip_len=32,
         frame_interval=7,
-        num_clips=3,
+        num_clips=2,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -95,7 +95,7 @@ test_pipeline = [
 #    dict(type='Flip', flip_ratio=0),
 
 data = dict(
-    videos_per_gpu=16,
+    videos_per_gpu=8,
     workers_per_gpu=8,
     train=dict(
         type=dataset_type,

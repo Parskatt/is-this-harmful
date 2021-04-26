@@ -5,7 +5,7 @@ import warnings
 
 import numpy as np
 import mmcv
-from mmcv import load
+from mmcv import load, dump
 import torch
 from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
@@ -22,7 +22,10 @@ from mmaction.models import build_model
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Combine Visual and Audio modalities')
-    parser.add_argument('results',nargs='+', help='result file(s)')
+    parser.add_argument('video', help='result file')
+    parser.add_argument('audio', help='result file')
+    parser.add_argument('--fusetype',default='indep',help='type of fusion, mean or indep')
+    parser.add_argument('--out',help='out-name')
     args = parser.parse_args()
     return args
 
@@ -30,16 +33,22 @@ def parse_args():
 def main():
     
     args = parse_args()
-    if os.path.isdir(args.results[0]):
-        results = [os.path.join(args.results[0],result) for result in os.listdir(args.results[0])]
+    vid = np.array(load(args.video))
+    audio = np.array(load(args.audio))
+    both = np.stack((vid,audio))
+    x = np.linspace(0,1,4)[None,None]
+    if args.fusetype == 'indep':
+        outs = np.exp((np.log(both)).sum(0))
+    elif args.fusetype == 'mean':
+        outs = both.mean(0)
+    elif args.fusetype == 'max':
+        mu = (x*both).sum(-1,keepdims=True)
+        mask = mu > mu.mean(0,keepdims=True) 
+        outs = (both*mask).sum(0)
     else:
-        results = args.results
-    outs = np.array([load(result) for result in results])
-    print(outs[0])
-
-    outs = np.exp((np.log(outs)).sum(0))
+        raise ValueError(f'{args.fusetype} not recognized')
     outs /= outs.sum(1,keepdims=True)
-    print(outs)
+    dump(outs,args.out)
 
 
 if __name__ == '__main__':

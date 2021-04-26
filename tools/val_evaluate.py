@@ -3,9 +3,7 @@ import os
 import os.path as osp
 import warnings
 
-import numpy as np
 import mmcv
-from mmcv import load
 import torch
 from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
@@ -13,17 +11,27 @@ from mmcv.fileio.io import file_handlers
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmcv.runner.fp16_utils import wrap_fp16_model
-from mmcv.utils import get_logger
+
 from mmaction.apis import multi_gpu_test, single_gpu_test
 from mmaction.datasets import build_dataloader, build_dataset
 from mmaction.models import build_model
+from mmcv.utils import get_logger
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMAction2 test (and eval) a model')
-    parser.add_argument('config')
-    parser.add_argument('results',nargs='+', help='result file(s)')
+    parser.add_argument('config', help='test config file path')
+    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument(
+        '--out',
+        action='store_true',
+        help='output result file in pkl/yaml/json format')
+    parser.add_argument(
+        '--fuse-conv-bn',
+        action='store_true',
+        help='Whether to fuse conv and bn, this will slightly increase'
+        'the inference speed')
     parser.add_argument(
         '--eval',
         type=str,
@@ -90,15 +98,39 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
+    cfg.merge_from_dict(args.cfg_options)
+
+    # Load output_config from cfg
+    output_config = cfg.get('output_config', {})
+    # Overwrite output_config from args.out
+    #output_config = Config._merge_a_into_b(dict(out=args.out), output_config)
+
+    # Load eval_config from cfg
     eval_config = cfg.get('eval_config', {})
     if args.eval:
         # Overwrite eval_config from args.eval
         eval_config = Config._merge_a_into_b(
-                dict(metrics=args.eval), eval_config)
+            dict(metrics=args.eval), eval_config)
     if args.eval_options:
         # Add options from args.eval_options
         eval_config = Config._merge_a_into_b(args.eval_options, eval_config)
 
+    assert args.out or eval_config, \
+        ('Please specify at least one operation (save or eval the '
+         'results) with the argument "--out" or "--eval"')
+
+    if output_config.get('out', None):
+        out = output_config['out']
+        # make sure the dirname of the output path exists
+        mmcv.mkdir_or_exist(osp.dirname(out))
+        _, suffix = osp.splitext(out)
+        assert suffix[1:] in file_handlers, \
+            'The format of the output file should be json, pickle or yaml'
+
+    # set cudnn benchmark
+    if cfg.get('cudnn_benchmark', False):
+        torch.backends.cudnn.benchmark = True
+    cfg.data.test.test_mode = True
 
     if cfg.test_cfg is None:
         cfg.test_cfg = dict(average_clips=args.average_clips)
@@ -116,19 +148,47 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
-    dataset = build_dataset(cfg.data.test, dict(test_mode=True))
-    rank, _ = get_dist_info()
-    if os.path.isdir(args.results[0]):
-        results = [os.path.join(args.results[0],result) for result in os.listdir(args.results[0])]
+    dataset = build_dataset(cfg.data.val, dict(test_mode=True))
+    dataloader_setting = dict(
+        videos_per_gpu=cfg.data.get('videos_per_gpu', 1),
+        workers_per_gpu=cfg.data.get('workers_per_gpu', 1),
+        dist=distributed,
+        shuffle=False)
+    dataloader_setting = dict(dataloader_setting,
+                              **cfg.data.get('val_dataloader', {}))
+    data_loader = build_dataloader(dataset, **dataloader_setting)
+
+    # build the model and load checkpoint
+    model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+    fp16_cfg = cfg.get('fp16', None)
+    if fp16_cfg is not None:
+        wrap_fp16_model(model)
+    load_checkpoint(model, args.checkpoint, map_location='cpu')
+
+    if args.fuse_conv_bn:
+        model = fuse_conv_bn(model)
+
+    if not distributed:
+        model = MMDataParallel(model, device_ids=[0])
+        outputs = single_gpu_test(model, data_loader)
     else:
-        results = args.results
-    outs = np.array([load(result) for result in results])
-    outs = (outs).mean(0)
-    outputs = list(outs)#np.array([load(result) for result in results]).mean(0)
-    logger = get_logger(__name__,log_file="eval_logs/"+"-".join([os.path.basename(result).split('.')[0] for result in results]))
+        model = MMDistributedDataParallel(
+            model.cuda(),
+            device_ids=[torch.cuda.current_device()],
+            broadcast_buffers=False)
+        outputs = multi_gpu_test(model, data_loader, args.tmpdir,
+                                 args.gpu_collect)
+
+    rank, _ = get_dist_info()
+    log_path = os.path.dirname(args.checkpoint)
+    result_file = log_path+"/val_preds.json"
+    log_file = log_path+"/val_log"
+    logger = get_logger(__name__,log_file=log_file)
+
     if rank == 0:
-        if eval_config:
-            eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)
+        if args.out:
+            print(f'\nwriting results to {result_file}')
+            dataset.dump_results(outputs, result_file)
 
 
 if __name__ == '__main__':
