@@ -23,7 +23,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='MMAction2 test (and eval) a model')
     parser.add_argument('config')
-    parser.add_argument('results',nargs='+', help='result file(s)')
+    parser.add_argument('results', help='result file(s)')
     parser.add_argument(
         '--eval',
         type=str,
@@ -118,15 +118,19 @@ def main():
     # build the dataloader
     dataset = build_dataset(cfg.data.test, dict(test_mode=True))
     rank, _ = get_dist_info()
-    if os.path.isdir(args.results[0]):
-        results = [os.path.join(args.results[0],result) for result in os.listdir(args.results[0])]
+    if os.path.isdir(args.results):
+        raise NotImplementedError()
     else:
         results = args.results
-    outs = np.array([load(result) for result in results])
-    outs = (outs).mean(0)
-    outputs = list(outs)#np.array([load(result) for result in results]).mean(0)
-    logger = get_logger(__name__,log_file="eval_logs/"+"-".join([os.path.basename(result).split('.')[0] for result in results]))
+    outs = np.array(load(results))
+    outputs = list(outs)
+    log_path = os.path.dirname(args.results)
+    result_file = log_path+"/test_preds.json"
+    log_file = log_path+"/test_log"
+    logger = get_logger(__name__,log_file=log_file)
     if rank == 0:
+        print(f'\nwriting results to {result_file}')
+        dataset.dump_results(outputs, result_file)
         if eval_config:
             eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)
 

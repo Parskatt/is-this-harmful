@@ -62,11 +62,17 @@ class FusionHead(BaseHead):
         Returns:
             torch.Tensor: The classification scores for input samples.
         """
+        B,C = x.shape
+        x_0 = x
+        x = (x+2)/2
         x = self.fc_in(x)
         x = self.hidden(x)
         if self.dropout is not None:
             x = self.dropout(x)
         # [N, in_channels]
-        cls_score = self.fc_cls(x)
+        cls_score = self.fc_cls(x)#+x_0.reshape(B,C//self.num_classes,self.num_classes).sum(dim=1)
+        #print(x_0[0])
+        #print(cls_score[0])
+        #exit()
         # [N, num_classes]
         return cls_score

@@ -3,32 +3,32 @@ from ..registry import RECOGNIZERS
 from .base import BaseRecognizer
 
 @RECOGNIZERS.register_module()
-class FusionModel(BaseRecognizer):
+class FullTrailerModel(BaseRecognizer):
     """Audio recognizer model framework."""
 
-    def forward(self, video_pred, audio_pred, label=None, return_loss=True):
+    def forward(self, *preds, label=None, return_loss=True):
         """Define the computation performed at every call."""
         if return_loss:
             if label is None:
                 raise ValueError('Label should not be None.')
-            return self.forward_train(video_pred,audio_pred, label)
+            return self.forward_train(*preds, label)
 
-        return self.forward_test(video_pred, audio_pred)
+        return self.forward_test(*preds)
 
-    def forward_train(self, video_pred, audio_pred, labels):
+    def forward_train(self, *preds, labels):
         """Defines the computation performed at every call when training."""
-        x = torch.cat((video_pred,audio_pred),dim=1).log()
+        x = torch.cat(preds,dim=1).log()
 
         cls_score = self.cls_head(x)
         loss = self.cls_head.loss(cls_score, labels)
 
         return loss
 
-    def forward_test(self, video_pred, audio_pred):
+    def forward_test(self, *preds):
         """Defines the computation performed at every call when evaluation and
         testing."""
         #print(video_pred,audio_pred)
-        x = torch.cat((video_pred,audio_pred),dim=1).log()
+        x = torch.cat(preds,dim=1).log()
         cls_score = self.cls_head(x)
         cls_score = self.average_clip(cls_score)
         #print(cls_score)
@@ -36,9 +36,6 @@ class FusionModel(BaseRecognizer):
         #cls_score = video_pred*audio_pred
         #cls_score /= cls_score.sum(dim=1,keepdim=True)
         return cls_score.cpu().numpy()
-
-    def forward_gradcam(self, audios):
-        raise NotImplementedError
 
     def train_step(self, data_batch, optimizer, **kwargs):
         """The iteration step during training.
@@ -66,12 +63,11 @@ class FusionModel(BaseRecognizer):
                 DDP, it means the batch size on each GPU), which is used for
                 averaging the logs.
         """
-        video_pred = data_batch['video_pred']
-        audio_pred = data_batch['audio_pred']
+        preds = data_batch['preds']
 
         label = data_batch['label']
 
-        losses = self(video_pred, audio_pred, label)
+        losses = self(*preds, label)
 
         loss, log_vars = self._parse_losses(losses)
 
@@ -89,12 +85,11 @@ class FusionModel(BaseRecognizer):
         during val epochs. Note that the evaluation after training epochs is
         not implemented with this method, but an evaluation hook.
         """
-        video_pred = data_batch['video_pred']
-        audio_pred = data_batch['audio_pred']
+        preds = data_batch['preds']
 
         label = data_batch['label']
 
-        losses = self(video_pred, audio_pred, label)
+        losses = self(*preds, label)
 
         loss, log_vars = self._parse_losses(losses)
 

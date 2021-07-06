@@ -48,7 +48,8 @@ def main():
     else:
         raise ValueError(f'{args.fusetype} not recognized')
     outs /= outs.sum(1,keepdims=True)
-    dump(outs,args.out)
+    os.makedirs(args.out,exist_ok=True)
+    dump(outs,args.out+"/test_preds.json")
 
 
 if __name__ == '__main__':

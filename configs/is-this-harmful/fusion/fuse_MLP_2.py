@@ -8,7 +8,7 @@ model = dict(
         num_classes=4,
         in_channels=8,
         dropout_ratio=0.5,
-        channels=128,
+        channels=64,
         num_layers=1,
         label_as_distribution=label_as_distribution,
     loss_cls=dict(type='KLDivergenceLoss')))
@@ -36,15 +36,15 @@ test_pipeline = [
     dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['video_pred','audio_pred'])
 ]
-train_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/train_preds.json"
-train_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/train_preds.json"
-val_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/val_preds.json"
-val_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/val_preds.json"
-test_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/test_preds.json"
-test_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/test_preds.json"
+train_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_2/slowfast_swe_trailers_class_balanced_KL/train_preds.json"
+train_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_2/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/train_preds.json"
+val_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_2/slowfast_swe_trailers_class_balanced_KL/val_preds.json"
+val_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_2/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/val_preds.json"
+test_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_2/slowfast_swe_trailers_class_balanced_KL/test_preds.json"
+test_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_2/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/test_preds.json"
 
 data = dict(
-    videos_per_gpu=64,
+    videos_per_gpu=16,
     workers_per_gpu=8,
     train=dict(
         type=dataset_type,
@@ -74,13 +74,13 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='Adam', lr=0.01,
+    type='SGD',momentum=0.9, lr=1e-3,
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=1e-2)
-total_epochs = 10
-checkpoint_config = dict(interval=5)
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-3)
+total_epochs = 5
+checkpoint_config = dict(interval=1)
 evaluation = dict(
     interval=10, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 log_config = dict(
