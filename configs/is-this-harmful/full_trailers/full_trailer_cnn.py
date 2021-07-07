@@ -25,16 +25,16 @@ ann_file_train = 'data/swe_trailers/ft_train.json'
 ann_file_val = 'data/swe_trailers/ft_val.json'
 ann_file_test = 'data/swe_trailers/ft_test.json'
 train_pipeline = [
-    dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
-    dict(type='ToTensor', keys=['video_pred','audio_pred'])
+    dict(type='Collect', keys=['preds', 'label'], meta_keys=[]),
+    dict(type='ToTensor', keys=['preds'])
 ]
 val_pipeline = [
-    dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
-    dict(type='ToTensor', keys=['video_pred','audio_pred'])
+    dict(type='Collect', keys=['preds', 'label'], meta_keys=[]),
+    dict(type='ToTensor', keys=['preds'])
 ]
 test_pipeline = [
-    dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
-    dict(type='ToTensor', keys=['video_pred','audio_pred'])
+    dict(type='Collect', keys=['preds', 'label'], meta_keys=[]),
+    dict(type='ToTensor', keys=['preds'])
 ]
 #train_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/train_preds_with_id.json"
 train_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/train_preds_with_id.json"
