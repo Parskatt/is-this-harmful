@@ -18,7 +18,7 @@ from ..core import (mean_class_accuracy, top_k_accuracy, confusion_matrix,
 import random
 
 @DATASETS.register_module()
-class SweTrailersFusionDataset(SweTrailersDataset):
+class SweFullTrailersDataset(SweTrailersDataset):
     """Swedish Movie Trailer Dataset for prediction fusion
 
     Loads .json files with the annotations
@@ -32,7 +32,7 @@ class SweTrailersFusionDataset(SweTrailersDataset):
         label_as_distribution (bool): if the label should be converted into a distribution 
     """
 
-    def __init__(self, ann_file, *preds, pipeline, data_prefix=None, num_classes=4, label_as_distribution=True, sample_by_class=False, **kwargs):
+    def __init__(self, ann_file, preds, pipeline, data_prefix=None, num_classes=4, label_as_distribution=True, sample_by_class=False, **kwargs):
         self.preds = preds
         super().__init__(ann_file, pipeline, data_prefix=data_prefix, num_classes=num_classes, label_as_distribution=label_as_distribution, sample_by_class=sample_by_class, **kwargs)
     def label_to_ind(self, lbl):
@@ -41,20 +41,17 @@ class SweTrailersFusionDataset(SweTrailersDataset):
     def load_annotations(self):
         """Load annotation file to get video information."""
         video_infos = json.load(open(self.ann_file, "r"))
-        audio_preds = json.load(open(self.audio_preds,"r"))
-        video_preds = json.load(open(self.video_preds,"r"))
-        for idx,clip in enumerate(video_infos):
-            clip["orig_label"] = clip["label"].copy()
+        loaded_preds = [json.load(open(pred,"r")) for pred in self.preds]
+        for trailer in video_infos:
+            trailer["orig_label"] = trailer["label"]
             if self.label_as_distribution:
                 p = np.zeros(self.num_classes)
-                c = self.label_to_ind(clip["label"])
+                c = self.label_to_ind(trailer["label"])
                 p[c] = 1
-                clip["label"] = p
+                trailer["label"] = p
             else:
-                lbl = clip["label"]#[0]
-                clip["label"] = self.label_to_ind(lbl)
-            clip["audio_path"] = join(
-                self.data_prefix, clip["filename"], clip["filename"]+".npy")
-            clip["preds"] = [self.preds[k][idx] for k in range(len(self.preds))]
+                lbl = trailer["label"]
+                trailer["label"] = self.label_to_ind(lbl)
+            trailer["preds"] = np.array([[loaded_preds[k][clip] for k in range(len(self.preds))] for clip in trailer["clips"]])
         return video_infos
 

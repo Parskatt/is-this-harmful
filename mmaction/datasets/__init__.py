@@ -14,6 +14,7 @@ from .ssn_dataset import SSNDataset
 from .video_dataset import VideoDataset
 from .swe_trailers_dataset import SweTrailersDataset
 from .swe_trailers_fusion_dataset import SweTrailersFusionDataset
+from .swe_full_trailers_dataset import SweFullTrailersDataset
 
 
 __all__ = [
@@ -21,5 +22,5 @@ __all__ = [
     'RawframeDataset', 'BaseDataset', 'ActivityNetDataset', 'SSNDataset',
     'HVUDataset', 'AudioDataset', 'AudioFeatureDataset', 'ImageDataset',
     'RawVideoDataset', 'AVADataset', 'AudioVisualDataset', 'SweTrailersDataset',
-    'SweTrailersFusionDataset'
+    'SweTrailersFusionDataset', 'SweFullTrailersDataset'
 ]

@@ -6,16 +6,16 @@ from .base import BaseRecognizer
 class FullTrailerModel(BaseRecognizer):
     """Audio recognizer model framework."""
 
-    def forward(self, *preds, label=None, return_loss=True):
+    def forward(self, preds, cls_head, label=None, return_loss=True):
         """Define the computation performed at every call."""
         if return_loss:
             if label is None:
                 raise ValueError('Label should not be None.')
-            return self.forward_train(*preds, label)
+            return self.forward_train(preds, label)
 
-        return self.forward_test(*preds)
+        return self.forward_test(preds)
 
-    def forward_train(self, *preds, labels):
+    def forward_train(self, preds, labels):
         """Defines the computation performed at every call when training."""
         x = torch.cat(preds,dim=1).log()
 
@@ -24,7 +24,7 @@ class FullTrailerModel(BaseRecognizer):
 
         return loss
 
-    def forward_test(self, *preds):
+    def forward_test(self, preds):
         """Defines the computation performed at every call when evaluation and
         testing."""
         #print(video_pred,audio_pred)
@@ -67,7 +67,7 @@ class FullTrailerModel(BaseRecognizer):
 
         label = data_batch['label']
 
-        losses = self(*preds, label)
+        losses = self(preds, label)
 
         loss, log_vars = self._parse_losses(losses)
 
@@ -89,7 +89,7 @@ class FullTrailerModel(BaseRecognizer):
 
         label = data_batch['label']
 
-        losses = self(*preds, label)
+        losses = self(preds, label)
 
         loss, log_vars = self._parse_losses(losses)
 
@@ -99,3 +99,6 @@ class FullTrailerModel(BaseRecognizer):
             num_samples=len(next(iter(data_batch.values()))))
 
         return outputs
+
+    def forward_gradcam(self, imgs):
+        raise NotImplementedError

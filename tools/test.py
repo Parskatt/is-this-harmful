@@ -178,10 +178,12 @@ def main():
             broadcast_buffers=False)
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
-
+    filenames = [sample["filename"] for sample in dataset.video_infos]
+    outputs_with_id = {a:b for a,b in zip(filenames,outputs)}
     rank, _ = get_dist_info()
     log_path = os.path.dirname(args.checkpoint)
     result_file = log_path+"/test_preds.json"
+    result_with_id_file = log_path+"/test_preds_with_id.json"
     log_file = log_path+"/test_log"
     logger = get_logger(__name__,log_file=log_file)
 
@@ -189,6 +191,7 @@ def main():
         if args.out:
             print(f'\nwriting results to {result_file}')
             dataset.dump_results(outputs, result_file)
+            dataset.dump_results(outputs_with_id, result_with_id_file)
         if eval_config:
             eval_res = dataset.evaluate(outputs,metric_options=dict(top_k_accuracy=dict(topk=(1,2))), **eval_config,logger=logger)
 
