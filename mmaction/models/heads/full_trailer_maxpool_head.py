@@ -47,5 +47,5 @@ class FullTrailerMaxPoolHead(BaseHead):
             torch.Tensor: The classification scores for input samples.
         """
         cls_score = self.fc_cls(x)
-        cls_score = cls_score.max(dim=-1)
+        cls_score = cls_score.max(dim=-1).values
         return cls_score
