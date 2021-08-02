@@ -4,7 +4,7 @@ model = dict(
     type='FullTrailerModel',
     backbone=None,
     cls_head=dict(
-        type='FullTrailerCNNHead',
+        type='FullTrailerMaxPoolHead',
         num_classes=4,
         in_channels=4,
         dropout_ratio=0.0,
@@ -88,7 +88,7 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_name = 'full_trailer_cnn'
+exp_name = 'full_trailer_maxpool'
 work_dir = './work_dirs/'+exp_name
 load_from = None
 resume_from = None

@@ -6,7 +6,7 @@ from .base import BaseHead
 
 
 @HEADS.register_module()
-class FullTrailerCNNHead(BaseHead):
+class FullTrailerMaxPoolHead(BaseHead):
     """Classification head for TSN on audio.
 
     Args:
@@ -31,23 +31,6 @@ class FullTrailerCNNHead(BaseHead):
                  channels = 64,
                  **kwargs):
         super().__init__(num_classes, in_channels, loss_cls=loss_cls, **kwargs)
-
-        self.spatial_type = spatial_type
-        self.dropout_ratio = dropout_ratio
-
-        if self.spatial_type == 'avg':
-            self.avg_pool = True
-        else:
-            self.avg_pool = None
-
-        if self.dropout_ratio != 0:
-            self.dropout = nn.Dropout(p=self.dropout_ratio)
-        else:
-            self.dropout = None
-        create_conv_block = lambda in_channels,out_channels, stride: nn.Sequential(nn.Conv1d(in_channels, out_channels,3,stride,1),nn.ReLU(True),nn.GroupNorm(4,out_channels))
-        self.layer1 = nn.Sequential(create_conv_block(self.in_channels,channels,2),
-                                    create_conv_block(channels,channels,2),
-                                    create_conv_block(channels,channels,1))
         self.fc_cls = nn.Conv1d(in_channels, self.num_classes,1,1,0)
 
     def init_weights(self):
@@ -63,10 +46,6 @@ class FullTrailerCNNHead(BaseHead):
         Returns:
             torch.Tensor: The classification scores for input samples.
         """
-        #x = self.layer1(x)
-        if self.dropout is not None:
-            x = self.dropout(x)
         cls_score = self.fc_cls(x)
-        if self.avg_pool:
-            cls_score = cls_score.mean(dim=-1)
+        cls_score = cls_score.max(dim=-1)
         return cls_score

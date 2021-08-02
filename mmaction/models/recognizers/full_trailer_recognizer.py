@@ -6,35 +6,30 @@ from .base import BaseRecognizer
 class FullTrailerModel(BaseRecognizer):
     """Audio recognizer model framework."""
 
-    def forward(self, preds, cls_head, label=None, return_loss=True):
+    def forward(self, preds, label=None, return_loss=True):
         """Define the computation performed at every call."""
+        x = preds.log().sum(dim=-2).permute(0,2,1) # To fit with pytorch standard ordering
+        x = x-x.mean()#/x.std()
+
         if return_loss:
             if label is None:
                 raise ValueError('Label should not be None.')
-            return self.forward_train(preds, label)
+            return self.forward_train(x, label)
 
-        return self.forward_test(preds)
+        return self.forward_test(x)
 
-    def forward_train(self, preds, labels):
+    def forward_train(self, x, labels):
         """Defines the computation performed at every call when training."""
-        x = torch.cat(preds,dim=1).log()
 
         cls_score = self.cls_head(x)
         loss = self.cls_head.loss(cls_score, labels)
-
         return loss
 
-    def forward_test(self, preds):
+    def forward_test(self, x):
         """Defines the computation performed at every call when evaluation and
         testing."""
-        #print(video_pred,audio_pred)
-        x = torch.cat(preds,dim=1).log()
         cls_score = self.cls_head(x)
         cls_score = self.average_clip(cls_score)
-        #print(cls_score)
-        #exit()
-        #cls_score = video_pred*audio_pred
-        #cls_score /= cls_score.sum(dim=1,keepdim=True)
         return cls_score.cpu().numpy()
 
     def train_step(self, data_batch, optimizer, **kwargs):

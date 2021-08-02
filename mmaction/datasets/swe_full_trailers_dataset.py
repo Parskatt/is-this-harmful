@@ -32,7 +32,7 @@ class SweFullTrailersDataset(SweTrailersDataset):
         label_as_distribution (bool): if the label should be converted into a distribution 
     """
 
-    def __init__(self, ann_file, preds, pipeline, data_prefix=None, num_classes=4, label_as_distribution=True, sample_by_class=False, **kwargs):
+    def __init__(self, ann_file, preds, pipeline, data_prefix=None, num_classes=4, label_as_distribution=False, sample_by_class=False, **kwargs):
         self.preds = preds
         super().__init__(ann_file, pipeline, data_prefix=data_prefix, num_classes=num_classes, label_as_distribution=label_as_distribution, sample_by_class=sample_by_class, **kwargs)
     def label_to_ind(self, lbl):
@@ -52,6 +52,6 @@ class SweFullTrailersDataset(SweTrailersDataset):
             else:
                 lbl = trailer["label"]
                 trailer["label"] = self.label_to_ind(lbl)
-            trailer["preds"] = np.array([[loaded_preds[k][clip] for k in range(len(self.preds))] for clip in trailer["clips"]])
+            trailer["preds"] = np.array([[loaded_preds[k][clip] for k in range(len(self.preds))] for clip in trailer["clips"]],dtype=np.float32)
         return video_infos
 
