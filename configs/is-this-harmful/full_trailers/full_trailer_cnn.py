@@ -36,11 +36,11 @@ test_pipeline = [
     dict(type='Collect', keys=['preds', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['preds'])
 ]
-#train_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/train_preds_with_id.json"
+train_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/train_preds_with_id.json"
 train_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/train_preds_with_id.json"
-#val_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/val_preds.json"
+val_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/val_preds_with_id.json"
 val_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/val_preds_with_id.json"
-#test_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/test_preds.json"
+test_video_preds = "/home/johed950/is-this-harmful/work_dirs/train_video_1/slowfast_swe_trailers_class_balanced_KL/test_preds_with_id.json"
 test_audio_preds = "/home/johed950/is-this-harmful/work_dirs/train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_KL/test_preds_with_id.json"
 
 data = dict(
@@ -48,7 +48,7 @@ data = dict(
     workers_per_gpu=0,
     train=dict(
         type=dataset_type,
-        preds=[train_audio_preds],
+        preds=[train_audio_preds, train_video_preds],
         ann_file=ann_file_train,
         data_prefix=data_root,
         pipeline=train_pipeline,
@@ -57,7 +57,7 @@ data = dict(
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
-        preds=[val_audio_preds],
+        preds=[val_audio_preds, val_video_preds],
         data_prefix=data_root_val,
         pipeline=val_pipeline,
         label_as_distribution=label_as_distribution,
@@ -65,7 +65,7 @@ data = dict(
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
-        preds=[test_audio_preds],
+        preds=[test_audio_preds, test_video_preds],
         data_prefix=data_root_test,
         pipeline=test_pipeline,
         label_as_distribution=label_as_distribution))

@@ -157,7 +157,11 @@ class SweTrailersDataset(BaseDataset):
             (len(self.video_infos), self.num_classes))
         for idx, clip in enumerate(self.video_infos):
             p = np.zeros(self.num_classes)
-            for lbl in clip["orig_label"]:
+            if not isinstance(clip["orig_label"],list):
+                lbls = [clip["orig_label"]]
+            else:
+                lbls = clip["orig_label"]
+            for lbl in lbls:
                 c = self.label_to_ind(lbl)
                 p[c] += 1
             p /= np.sum(p)

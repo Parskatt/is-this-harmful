@@ -9,7 +9,7 @@ class FullTrailerModel(BaseRecognizer):
     def forward(self, preds, label=None, return_loss=True):
         """Define the computation performed at every call."""
         x = preds.log().sum(dim=-2).permute(0,2,1) # To fit with pytorch standard ordering
-        x = x-x.mean()#/x.std()
+        x = (x-x.mean())#/x.std()
 
         if return_loss:
             if label is None:
