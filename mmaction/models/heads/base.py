@@ -49,10 +49,12 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
                  loss_cls=dict(type='CrossEntropyLoss', loss_factor=1.0),
                  multi_class=False,
                  label_as_distribution=False,
+                 regression = False,
                  label_smooth_eps=0.0):
         super().__init__()
         self.num_classes = num_classes
         self.in_channels = in_channels
+        self.regression = regression
         self.loss_cls = build_loss(loss_cls)
         self.multi_class = multi_class
         self.label_smooth_eps = label_smooth_eps
@@ -80,7 +82,7 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
         losses = dict()
         if labels.shape == torch.Size([]) or (self.label_as_distribution and len(labels.shape)==1):
             labels = labels.unsqueeze(0)
-        if not self.multi_class:
+        if not self.multi_class and not self.regression:
             if self.label_as_distribution:
                 top_labels = labels.argmax(dim=-1)
             else:
@@ -91,10 +93,11 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
                 top_k_acc[0], device=cls_score.device)
             losses['top2_acc'] = torch.tensor(
                 top_k_acc[1], device=cls_score.device)
-
-        elif self.label_smooth_eps != 0:
+        elif self.label_smooth_eps != 0 and False:
             labels = ((1 - self.label_smooth_eps) * labels +
                       self.label_smooth_eps / self.num_classes)
+        else:
+            pass
 
         loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         # loss_cls may be dictionary or single tensor

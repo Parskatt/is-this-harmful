@@ -5,11 +5,18 @@ from .base import BaseRecognizer
 @RECOGNIZERS.register_module()
 class FullTrailerModel(BaseRecognizer):
     """Audio recognizer model framework."""
+    def __init__(self, *args, log_space_input=True, **kwargs):
+        super().__init__(*args,**kwargs)
+        self.log_space_input=log_space_input
 
     def forward(self, preds, label=None, return_loss=True):
         """Define the computation performed at every call."""
-        x = preds.log().sum(dim=-2).permute(0,2,1) # To fit with pytorch standard ordering
-        x = (x-x.mean())#/x.std()
+        if self.log_space_input:
+            x = preds.log().sum(dim=-2).permute(0,2,1) # To fit with pytorch standard ordering
+            x = (x-x.mean())#/x.std()
+        else:
+            x = preds.prod(dim=-2)
+            x /= x.sum(dim=-1,keepdim=True)
 
         if return_loss:
             if label is None:

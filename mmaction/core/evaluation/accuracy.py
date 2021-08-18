@@ -526,7 +526,7 @@ def wasserstein_1_distance(q,p,delta_x=1.):
 def euclidean_distance(q,p,delta_x=1.):
     q,p = np.array(q),np.array(p)
     B,C = q.shape
-    x = delta_x*np.linspace(0,C,C)
+    x = delta_x*np.arange(0,C)
     mu_q = (x*q).sum(axis=1,keepdims=True)
     mu_p = (x*p).sum(axis=1,keepdims=True)
     d = np.abs(mu_q-mu_p)
@@ -535,7 +535,7 @@ def euclidean_distance(q,p,delta_x=1.):
 def class_euclidean_distance(q,p,delta_x=1.):
     q,p = np.array(q),np.array(p)
     B,C = q.shape
-    x = delta_x*np.linspace(0,C,C)
+    x = delta_x*np.arange(0,C)
     mu_q = (x*q).sum(axis=1,keepdims=True)
     mu_p = (x*p).sum(axis=1,keepdims=True)
     d = np.abs(mu_q-mu_p)
