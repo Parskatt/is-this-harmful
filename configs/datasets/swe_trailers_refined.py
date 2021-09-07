@@ -1,5 +1,4 @@
 label_as_distribution = True
-
 model = dict(
     type='Recognizer3D',
     backbone=dict(
@@ -36,8 +35,7 @@ model = dict(
         num_classes=4,
         spatial_type='avg',
         dropout_ratio=0.5,
-        label_as_distribution=label_as_distribution,
-        loss_cls=dict(type='KLDivergenceLoss')))
+        label_as_distribution=label_as_distribution))
 train_cfg = None
 test_cfg = dict(average_clips='prob')
 dataset_type = 'SweTrailersDataset'
@@ -82,7 +80,7 @@ test_pipeline = [
         type='SampleFrames',
         clip_len=32,
         frame_interval=7,
-        num_clips=2,
+        num_clips=1,
         test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -96,40 +94,38 @@ test_pipeline = [
 #    dict(type='Flip', flip_ratio=0),
 
 data = dict(
-    videos_per_gpu=8,
-    workers_per_gpu=8,
+    videos_per_gpu=7,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
         data_prefix=data_root,
         pipeline=train_pipeline,
-        label_as_distribution=label_as_distribution,
-        sample_by_class=True),
+        label_as_distribution=label_as_distribution),
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
         data_prefix=data_root_val,
         pipeline=val_pipeline,
-        label_as_distribution=label_as_distribution,
-        sample_by_class=True),
+        label_as_distribution=label_as_distribution),
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,
-        data_prefix=data_root_test,
+        data_prefix=data_root_val,
         pipeline=test_pipeline,
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.001, momentum=0.9,
+    type='SGD', lr=0.01, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 1 gpu
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(
     policy='CosineAnnealing',
-    min_lr=1e-3)
-total_epochs = 5
-checkpoint_config = dict(interval=5)
-workflow = [('train', 1),('val', 1)]#
+    min_lr=0.)
+total_epochs = 200
+checkpoint_config = dict(interval=50)
+workflow = [('train', 1),('val', 1)]
 evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 log_config = dict(
@@ -139,8 +135,7 @@ log_config = dict(
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_name = 'slowfast_swe_trailers_class_balanced_KL_refined'
-work_dir = './work_dirs/'+exp_name
+work_dir = './work_dirs/slowfast_r50_3d_8x8x1_256e_swe_trailers'
 load_from="https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth"
 resume_from = None
 find_unused_parameters = False

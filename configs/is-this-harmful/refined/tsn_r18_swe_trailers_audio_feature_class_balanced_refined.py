@@ -1,4 +1,4 @@
-label_as_distribution = True
+label_as_distribution = False
 # model settings
 model = dict(
     type='AudioRecognizer',
@@ -10,7 +10,7 @@ model = dict(
         dropout_ratio=0.5,
         init_std=0.01,
         label_as_distribution=label_as_distribution,
-    loss_cls=dict(type='KLDivergenceLoss')))
+    loss_cls=dict(type='CrossEntropyLoss')))
 
 # model training and testing settings
 train_cfg = None
@@ -91,7 +91,7 @@ optimizer = dict(
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=1e-3)
-total_epochs = 10
+total_epochs = 5
 checkpoint_config = dict(interval=5)
 evaluation = dict(
     interval=10, metrics=['top_k_accuracy', 'mean_class_accuracy'])
