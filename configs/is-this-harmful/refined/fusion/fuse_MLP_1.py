@@ -1,4 +1,4 @@
-label_as_distribution = True
+label_as_distribution = False
 # model settings
 model = dict(
     type='FusionModel',
@@ -21,9 +21,9 @@ dataset_type = 'SweTrailersFusionDataset'
 data_root = 'data/swe_trailers/data'
 data_root_val = 'data/swe_trailers/data'
 data_root_test = 'data/swe_trailers/data'
-ann_file_train = 'data/swe_trailers/train.json'
-ann_file_val = 'data/swe_trailers/val.json'
-ann_file_test = 'data/swe_trailers/test.json'
+ann_file_train = 'data/swe_trailers/refined_train.json'
+ann_file_val = 'data/swe_trailers/refined_val.json'
+ann_file_test = 'data/swe_trailers/refined_test.json'
 train_pipeline = [
     dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['video_pred','audio_pred'])
@@ -91,7 +91,7 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_name = 'fusion_m'
+exp_name = 'refined_fusion_mlp_1'
 work_dir = './work_dirs/'+exp_name
 load_from = None
 resume_from = None

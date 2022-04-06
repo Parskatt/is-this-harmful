@@ -1,4 +1,4 @@
-label_as_distribution = True
+label_as_distribution = False
 # model settings
 model = dict(
     type='FusionModel',
@@ -21,9 +21,9 @@ dataset_type = 'SweTrailersFusionDataset'
 data_root = 'data/swe_trailers/data'
 data_root_val = 'data/swe_trailers/data'
 data_root_test = 'data/swe_trailers/data'
-ann_file_train = 'data/swe_trailers/train.json'
-ann_file_val = 'data/swe_trailers/val.json'
-ann_file_test = 'data/swe_trailers/test.json'
+ann_file_train = 'data/swe_trailers/refined_train.json'
+ann_file_val = 'data/swe_trailers/refined_val.json'
+ann_file_test = 'data/swe_trailers/refined_test.json'
 train_pipeline = [
     dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['video_pred','audio_pred'])
@@ -36,12 +36,12 @@ test_pipeline = [
     dict(type='Collect', keys=['video_pred', 'audio_pred', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['video_pred','audio_pred'])
 ]
-train_video_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_video_1/slowfast_swe_trailers_class_balanced_refined/train_preds.json"
-train_audio_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_refined/train_preds.json"
-val_video_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_video_1/slowfast_swe_trailers_class_balanced_refined/val_preds.json"
-val_audio_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_refined/val_preds.json"
-test_video_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_video_1/slowfast_swe_trailers_class_balanced_refined/test_preds.json"
-test_audio_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_audio_1/tsn_r18_swe_trailers_audio_feature_class_balanced_refined/test_preds.json"
+train_video_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_video_2/slowfast_swe_trailers_class_balanced_refined/train_preds.json"
+train_audio_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_audio_2/tsn_r18_swe_trailers_audio_feature_class_balanced_refined/train_preds.json"
+val_video_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_video_2/slowfast_swe_trailers_class_balanced_refined/val_preds.json"
+val_audio_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_audio_2/tsn_r18_swe_trailers_audio_feature_class_balanced_refined/val_preds.json"
+test_video_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_video_2/slowfast_swe_trailers_class_balanced_refined/test_preds.json"
+test_audio_preds = "/home/johed950/is-this-harmful/work_dirs/refined_train_audio_2/tsn_r18_swe_trailers_audio_feature_class_balanced_refined/test_preds.json"
 
 data = dict(
     videos_per_gpu=16,
@@ -91,7 +91,7 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_name = 'fusion_m'
+exp_name = 'refined_fusion_mlp_2'
 work_dir = './work_dirs/'+exp_name
 load_from = None
 resume_from = None

@@ -73,11 +73,11 @@ data = dict(
         label_as_distribution=label_as_distribution))
 # optimizer
 optimizer = dict(
-    type='SGD',momentum=0.9, lr=1e-3,
+    type='SGD',momentum=0.9, lr=1e-4,
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='CosineAnnealing', min_lr=1e-3)
+lr_config = dict(policy='CosineAnnealing', min_lr=1e-4)
 total_epochs = 50
 checkpoint_config = dict(interval=1)
 evaluation = dict(
