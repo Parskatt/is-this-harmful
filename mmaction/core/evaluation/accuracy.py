@@ -81,6 +81,47 @@ def mean_class_accuracy(scores, labels):
 
     return mean_class_acc
 
+def mean_class_precision(scores, labels):
+    """Calculate mean class precision.
+
+    Args:
+        scores (list[np.ndarray]): Prediction scores for each class.
+        labels (list[int]): Ground truth labels.
+
+    Returns:
+        np.ndarray: Mean class precision.
+    """
+    pred = np.argmax(scores, axis=1)
+    cf_mat = confusion_matrix(pred, labels).astype(float)
+
+    cls_cnt = cf_mat.sum(axis=0)
+    cls_hit = np.diag(cf_mat)
+
+    mean_class_acc = np.mean(
+        [hit / cnt if cnt else 0.0 for cnt, hit in zip(cls_cnt, cls_hit)])
+
+    return mean_class_acc
+
+def mean_class_recall(scores, labels):
+    """Calculate mean class recall.
+
+    Args:
+        scores (list[np.ndarray]): Prediction scores for each class.
+        labels (list[int]): Ground truth labels.
+
+    Returns:
+        np.ndarray: Mean class recall.
+    """
+    pred = np.argmax(scores, axis=1)
+    cf_mat = confusion_matrix(pred, labels).astype(float)
+
+    cls_pred = cf_mat.sum(axis=1)
+    cls_hit = np.diag(cf_mat)
+
+    mean_class_acc = np.mean(
+        [hit / cnt if cnt else 0.0 for cnt, hit in zip(cls_pred, cls_hit)])
+
+    return mean_class_acc
 
 def top_k_accuracy(scores, labels, topk=(1, )):
     """Calculate top k accuracy score.

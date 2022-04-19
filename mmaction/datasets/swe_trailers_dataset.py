@@ -12,7 +12,7 @@ from ..core import mean_average_precision
 from .base import BaseDataset
 from .registry import DATASETS
 
-from ..core import (mean_class_accuracy, top_k_accuracy, confusion_matrix,
+from ..core import (mean_class_accuracy, mean_class_recall, mean_class_precision, top_k_accuracy, confusion_matrix,
                     wasserstein_1_distance, KL, euclidean_distance, 
                     class_euclidean_distance,mean_class_euclidean_distance)
 import random
@@ -133,7 +133,8 @@ class SweTrailersDataset(BaseDataset):
 
         metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
         allowed_metrics = [
-            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy', 
+            'top_k_accuracy', 'confusion_matrix', 'mean_class_accuracy',
+            'mean_class_recall','mean_class_precision', 
             'wasserstein', 'KL', 'euclidean', 
             'class_euclidean','mean_class_euclidean'
         ]
@@ -192,6 +193,16 @@ class SweTrailersDataset(BaseDataset):
                 mean_acc = mean_class_accuracy(results, gt_labels)
                 eval_results['mean_class_accuracy'] = mean_acc
                 log_msg = f'\nMean class accuracy: \n {mean_acc:.4f}'
+                print_log(log_msg, logger=logger)
+            elif metric == 'mean_class_recall':
+                mean_acc = mean_class_recall(results, gt_labels)
+                eval_results['mean_class_recall'] = mean_acc
+                log_msg = f'\nMean class recall: \n {mean_acc:.4f}'
+                print_log(log_msg, logger=logger)
+            elif metric == 'mean_class_precision':
+                mean_acc = mean_class_precision(results, gt_labels)
+                eval_results['mean_class_precision'] = mean_acc
+                log_msg = f'\nMean class precision: \n {mean_acc:.4f}'
                 print_log(log_msg, logger=logger)
             elif metric == 'confusion_matrix':
                 result_argmax = np.argmax(results, axis=1)
